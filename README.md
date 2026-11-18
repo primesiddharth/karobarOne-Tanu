@@ -159,3 +159,7 @@ make lint
 5. **Contract-First**: OpenAPI 3.1 and AsyncAPI 2.6 contracts constrain all code implementations.
 
 For full architectural documentation, refer to the [`docs/`](docs/) directory.
+
+## Future Optimization Opportunities:
+
+The current implementation prioritizes architectural clarity, maintainability, and compliance with the project specifications over minimum code size. Future optimization may reduce duplicated boilerplate across microservices by extracting common infrastructure into `libs/platform_contracts`, while preserving all business logic, API contracts, database boundaries, security rules, and acceptance-test coverage. These optimizations are planned opportunities and have not yet been implemented.
