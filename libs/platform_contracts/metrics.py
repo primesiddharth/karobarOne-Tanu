@@ -6,7 +6,7 @@ DEPLOY.md §6: bounded labels (route template, status class, event type), outbox
 """
 from collections import defaultdict
 import threading
-from typing import Dict, Tuple
+from typing import Any, Dict, Tuple
 
 
 class MetricsRegistry:
@@ -16,13 +16,13 @@ class MetricsRegistry:
         self._counters: Dict[Tuple[str, Tuple[Tuple[str, str], ...]], float] = defaultdict(float)
         self._gauges: Dict[Tuple[str, Tuple[Tuple[str, str], ...]], float] = {}
 
-    def inc_counter(self, name: str, amount: float = 1.0, **labels) -> None:
+    def inc_counter(self, name: str, amount: float = 1.0, **labels: Any) -> None:
         """Increments a counter by amount with bounded label key/values."""
         lbl_tuple = tuple(sorted(labels.items()))
         with self._lock:
             self._counters[(name, lbl_tuple)] += amount
 
-    def set_gauge(self, name: str, value: float, **labels) -> None:
+    def set_gauge(self, name: str, value: float, **labels: Any) -> None:
         """Sets a gauge value with bounded label key/values."""
         lbl_tuple = tuple(sorted(labels.items()))
         with self._lock:

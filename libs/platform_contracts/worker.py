@@ -13,7 +13,7 @@ from .relay import dispatch_event_to_subscribers
 logger = structlog.get_logger("platform_contracts.worker")
 
 
-async def claim_batch(session, batch_size: int, lease_seconds: int, schema: str):
+async def claim_batch(session: Any, batch_size: int, lease_seconds: int, schema: str) -> Any:
     """Claims a batch of outbox rows by leasing them in a fast transaction using FOR UPDATE SKIP LOCKED."""
     now = datetime.now(timezone.utc)
     lease_until = now + timedelta(seconds=lease_seconds)
@@ -37,7 +37,7 @@ async def claim_batch(session, batch_size: int, lease_seconds: int, schema: str)
     return result.mappings().all()
 
 
-async def mark_sent(session, row_id, schema: str):
+async def mark_sent(session: Any, row_id: Any, schema: str) -> None:
     """Marks an outbox row as delivered."""
     now = datetime.now(timezone.utc)
     await session.execute(
@@ -46,7 +46,7 @@ async def mark_sent(session, row_id, schema: str):
     )
 
 
-async def mark_failed(session, row_id, attempts: int, schema: str):
+async def mark_failed(session: Any, row_id: Any, attempts: int, schema: str) -> None:
     """Applies exponential backoff or marks row dead after 5 attempts."""
     now = datetime.now(timezone.utc)
     if attempts >= 5:

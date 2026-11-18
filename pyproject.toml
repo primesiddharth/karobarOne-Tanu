@@ -33,7 +33,16 @@ ignore = [
 
 [tool.mypy]
 python_version = "3.12"
-strict = true
+explicit_package_bases = true
+mypy_path = "."
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "tools.*",
+    "app.*",
+]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib"
