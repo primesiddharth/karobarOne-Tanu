@@ -1,0 +1,586 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: karobarone-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev_postgres_password
+      POSTGRES_DB: karobarone_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../../tools/db/bootstrap.sql:/docker-entrypoint-initdb.d/01_bootstrap.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d karobarone_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # MinIO S3-compatible local object storage (KarobarOne Foundation Spec §11, Integration Spec §14)
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: karobarone-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpassword
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: quay.io/minio/mc:latest
+    container_name: karobarone-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 minioadmin minioadminpassword; do
+        echo 'Waiting for MinIO connection...';
+        sleep 1;
+      done;
+      mc mb --ignore-existing local/karobarone-media;
+      mc anonymous set none local/karobarone-media;
+      echo 'Bucket karobarone-media provisioned successfully.';
+      exit 0;
+      "
+
+  iam-api:
+    build:
+      context: ../..
+      dockerfile: services/iam/Dockerfile
+    container_name: karobarone-iam-api
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: iam
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://iam_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://iam_migrator:dev_migrator_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_iam
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  iam-worker:
+    build:
+      context: ../..
+      dockerfile: services/iam/Dockerfile
+    container_name: karobarone-iam-worker
+    command: ["python", "-m", "app.worker"]
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: iam
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://iam_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_iam
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+    depends_on:
+      iam-api:
+        condition: service_healthy
+
+  tenant-api:
+    build:
+      context: ../..
+      dockerfile: services/tenant/Dockerfile
+    container_name: karobarone-tenant-api
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: tenant
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://tenant_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://tenant_migrator:dev_migrator_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_tenant
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+    ports:
+      - "8002:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  tenant-worker:
+    build:
+      context: ../..
+      dockerfile: services/tenant/Dockerfile
+    container_name: karobarone-tenant-worker
+    command: ["python", "-m", "app.worker"]
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: tenant
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://tenant_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_tenant
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+    depends_on:
+      tenant-api:
+        condition: service_healthy
+
+  approval-api:
+    build:
+      context: ../..
+      dockerfile: services/approval/Dockerfile
+    container_name: karobarone-approval-api
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: approval
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://approval_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://approval_migrator:dev_migrator_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_approval
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+    ports:
+      - "8003:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  approval-worker:
+    build:
+      context: ../..
+      dockerfile: services/approval/Dockerfile
+    container_name: karobarone-approval-worker
+    command: ["python", "-m", "app.worker"]
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: approval
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://approval_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_approval
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+    depends_on:
+      approval-api:
+        condition: service_healthy
+
+  catalog-api:
+    build:
+      context: ../..
+      dockerfile: services/catalog/Dockerfile
+    container_name: karobarone-catalog-api
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: catalog
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://catalog_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://catalog_migrator:dev_migrator_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_catalog
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadminpassword
+      S3_BUCKET: karobarone-media
+      S3_REGION: us-east-1
+    ports:
+      - "8004:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  catalog-worker:
+    build:
+      context: ../..
+      dockerfile: services/catalog/Dockerfile
+    container_name: karobarone-catalog-worker
+    command: ["python", "-m", "app.worker"]
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: catalog
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://catalog_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_catalog
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadminpassword
+      S3_BUCKET: karobarone-media
+      S3_REGION: us-east-1
+    depends_on:
+      catalog-api:
+        condition: service_healthy
+
+  domain-api:
+    build:
+      context: ../..
+      dockerfile: services/domain/Dockerfile
+    container_name: karobarone-domain-api
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: domain
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://domain_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://domain_migrator:dev_migrator_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_domain
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+    ports:
+      - "8005:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  domain-worker:
+    build:
+      context: ../..
+      dockerfile: services/domain/Dockerfile
+    container_name: karobarone-domain-worker
+    command: ["python", "-m", "app.worker"]
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: domain
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://domain_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_domain
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+    depends_on:
+      domain-api:
+        condition: service_healthy
+
+  customer-api:
+    build:
+      context: ../..
+      dockerfile: services/customer/Dockerfile
+    container_name: karobarone-customer-api
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: customer
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://customer_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://customer_migrator:dev_migrator_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_customer
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+    ports:
+      - "8006:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  customer-worker:
+    build:
+      context: ../..
+      dockerfile: services/customer/Dockerfile
+    container_name: karobarone-customer-worker
+    command: ["python", "-m", "app.worker"]
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: customer
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://customer_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_customer
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+    depends_on:
+      customer-api:
+        condition: service_healthy
+
+  subscription-api:
+    build:
+      context: ../..
+      dockerfile: services/subscription/Dockerfile
+    container_name: karobarone-subscription-api
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: subscription
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://subscription_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://subscription_migrator:dev_migrator_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_subscription
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+    ports:
+      - "8007:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  subscription-worker:
+    build:
+      context: ../..
+      dockerfile: services/subscription/Dockerfile
+    container_name: karobarone-subscription-worker
+    command: ["python", "-m", "app.worker"]
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: subscription
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://subscription_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_subscription
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+    depends_on:
+      subscription-api:
+        condition: service_healthy
+
+  inventory-api:
+    build:
+      context: ../..
+      dockerfile: services/inventory/Dockerfile
+    container_name: karobarone-inventory-api
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: inventory
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://inventory_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://inventory_migrator:dev_migrator_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_inventory
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+      INVENTORY_SERVICE_URL: http://inventory-api:8000
+    ports:
+      - "8008:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  inventory-worker:
+    build:
+      context: ../..
+      dockerfile: services/inventory/Dockerfile
+    container_name: karobarone-inventory-worker
+    command: ["python", "-m", "app.worker"]
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: inventory
+      RUNNING_IN_DOCKER: "1"
+      DATABASE_URL: postgresql+asyncpg://inventory_svc:dev_svc_secret@postgres:5432/karobarone_dev
+      MY_SERVICE_KEY: dev_secret_key_inventory
+      IAM_SERVICE_URL: http://iam-api:8000
+      TENANT_SERVICE_URL: http://tenant-api:8000
+      APPROVAL_SERVICE_URL: http://approval-api:8000
+      CATALOG_SERVICE_URL: http://catalog-api:8000
+      DOMAIN_SERVICE_URL: http://domain-api:8000
+      CUSTOMER_SERVICE_URL: http://customer-api:8000
+      SUBSCRIPTION_SERVICE_URL: http://subscription-api:8000
+      INVENTORY_SERVICE_URL: http://inventory-api:8000
+    depends_on:
+      inventory-api:
+        condition: service_healthy
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: karobarone-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+
+  gateway-api:
+    build:
+      context: ../..
+      dockerfile: services/gateway/Dockerfile
+    container_name: karobarone-gateway-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: dev
+      SERVICE_NAME: gateway
+      PORT: 8000
+      UPSTREAM_IAM_URL: http://iam-api:8000
+      UPSTREAM_TENANT_URL: http://tenant-api:8000
+      UPSTREAM_APPROVAL_URL: http://approval-api:8000
+      UPSTREAM_CATALOG_URL: http://catalog-api:8000
+      UPSTREAM_DOMAIN_URL: http://domain-api:8000
+      UPSTREAM_CUSTOMER_URL: http://customer-api:8000
+      UPSTREAM_SUBSCRIPTION_URL: http://subscription-api:8000
+      UPSTREAM_INVENTORY_URL: http://inventory-api:8000
+      UPSTREAM_MONOLITH_URL: http://monolith:8000
+    depends_on:
+      iam-api:
+        condition: service_healthy
+      tenant-api:
+        condition: service_healthy
+      approval-api:
+        condition: service_healthy
+      catalog-api:
+        condition: service_healthy
+      domain-api:
+        condition: service_healthy
+      customer-api:
+        condition: service_healthy
+      subscription-api:
+        condition: service_healthy
+      inventory-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:
+  miniodata:
+

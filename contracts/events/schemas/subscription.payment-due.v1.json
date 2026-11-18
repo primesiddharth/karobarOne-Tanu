@@ -1,0 +1,75 @@
+{
+  "": "http://json-schema.org/draft-07/schema#",
+  "title": "subscription.payment-due.v1",
+  "description": "Event fact payload for subscription.payment-due.v1 published by SUB on subscription.lifecycle",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "aggregate_type",
+    "aggregate_id",
+    "occurred_at",
+    "correlation_id",
+    "producer",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_type": {
+      "type": "string",
+      "const": "subscription.payment-due.v1"
+    },
+    "event_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "aggregate_type": {
+      "type": "string"
+    },
+    "aggregate_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "store_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "causation_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "producer": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

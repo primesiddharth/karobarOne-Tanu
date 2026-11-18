@@ -1,0 +1,82 @@
+# ac_ownership.yaml — Machine-readable Acceptance Criteria ownership
+# Source: microservice/docs/SERVICES.md §10 and BTDD Appendix B
+# Rules:
+# 1. Exactly ONE primary service owner per AC.
+# 2. Secondary services are listed under 'support' (not strictly enforced by check_ac_coverage.py).
+# 3. Partial ACs (entitlement/archive side only) are explicitly marked under 'partial_acs'.
+# 4. Out of scope ACs for first 8: 15-34, 89, 90.
+
+services:
+  iam:
+    primary_acs: []
+    partial_acs: []
+    support: [35, 36, 76, 77, 78]
+
+  tenant:
+    primary_acs: [1, 2, 8, 9, 10, 35, 36, 37, 38, 39, 40]
+    partial_acs: [82, 83]
+    support: []
+
+  approval:
+    primary_acs: [80, 81]
+    partial_acs: [79]
+    support: []
+
+  catalog:
+    primary_acs: [4, 5, 6, 7, 12, 13, 14]
+    partial_acs: [79]
+    support: [60, 61]
+
+  domain:
+    primary_acs: [84, 85, 86, 87, 88]
+    partial_acs: []
+    support: [59]
+
+  customer:
+    primary_acs: [76, 77, 78]
+    partial_acs: []
+    support: []
+
+  subscription:
+    primary_acs:
+      - 11
+      - 41
+      - 42
+      - 43
+      - 44
+      - 45
+      - 46
+      - 47
+      - 48
+      - 49
+      - 50
+      - 51
+      - 52
+      - 53
+      - 54
+      - 55
+      - 56
+      - 59
+      - 60
+      - 61
+      - 62
+      - 63
+      - 64
+      - 65
+      - 66
+      - 67
+      - 68
+      - 69
+      - 70
+      - 71
+      - 72
+      - 73
+      - 74
+      - 75
+    partial_acs: [3, 57, 58]
+    support: []
+
+  inventory:
+    primary_acs: [] # FND-TST-014 concurrency test
+    partial_acs: []
+    support: []

@@ -1,0 +1,1003 @@
+openapi: 3.1.0
+info:
+  title: KarobarOne APPROVAL Service
+  version: 0.1.0
+paths:
+  /health/live:
+    get:
+      summary: Health Live
+      description: "Liveness probe returning 200 OK (RULES.md \xA71 C2)."
+      operationId: health_live_health_live_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /health/ready:
+    get:
+      summary: Health Ready
+      description: "Readiness probe verifying DB connectivity (RULES.md \xA71 C2)."
+      operationId: health_ready_health_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /internal/events:
+    post:
+      summary: Receive Internal Event
+      description: Ingress endpoint for cross-service events per SECURITY_LAYER.md.
+      operationId: receive_internal_event_internal_events_post
+      parameters:
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /approvals:
+    post:
+      summary: Create Approval
+      operationId: create_approval_approvals_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApprovalRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /approvals/queue:
+    get:
+      summary: Get Approval Queue
+      operationId: get_approval_queue_approvals_queue_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: subject_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subject Type
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalQueueResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /approvals/{id}:
+    get:
+      summary: Get Approval Detail
+      operationId: get_approval_detail_approvals__id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalDetailResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /approvals/{id}/approve:
+    post:
+      summary: Approve Content
+      operationId: approve_content_approvals__id__approve_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApproveResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /approvals/{id}/reject:
+    post:
+      summary: Reject Content
+      operationId: reject_content_approvals__id__reject_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RejectResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /approvals/{id}/emergency-takedown:
+    post:
+      summary: Emergency Takedown
+      operationId: emergency_takedown_approvals__id__emergency_takedown_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmergencyTakedownRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmergencyTakedownResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/approvals:
+    post:
+      summary: Create Approval
+      operationId: create_approval_api_v1_approvals_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApprovalRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/approvals/queue:
+    get:
+      summary: Get Approval Queue
+      operationId: get_approval_queue_api_v1_approvals_queue_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: subject_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subject Type
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalQueueResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/approvals/{id}:
+    get:
+      summary: Get Approval Detail
+      operationId: get_approval_detail_api_v1_approvals__id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalDetailResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/approvals/{id}/approve:
+    post:
+      summary: Approve Content
+      operationId: approve_content_api_v1_approvals__id__approve_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApproveResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/approvals/{id}/reject:
+    post:
+      summary: Reject Content
+      operationId: reject_content_api_v1_approvals__id__reject_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RejectResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/approvals/{id}/emergency-takedown:
+    post:
+      summary: Emergency Takedown
+      operationId: emergency_takedown_api_v1_approvals__id__emergency_takedown_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmergencyTakedownRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmergencyTakedownResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    ApprovalDetailResponse:
+      properties:
+        approval_id:
+          type: string
+          format: uuid
+          title: Approval Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        subject_type:
+          type: string
+          title: Subject Type
+        subject_id:
+          type: string
+          format: uuid
+          title: Subject Id
+        subject_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subject Version
+        status:
+          type: string
+          title: Status
+        priority:
+          type: integer
+          title: Priority
+        submitted_by:
+          type: string
+          format: uuid
+          title: Submitted By
+        submitted_at:
+          type: string
+          format: date-time
+          title: Submitted At
+        decisions:
+          items:
+            $ref: '#/components/schemas/DecisionDetail'
+          type: array
+          title: Decisions
+        takedowns:
+          items:
+            $ref: '#/components/schemas/TakedownDetail'
+          type: array
+          title: Takedowns
+      additionalProperties: false
+      type: object
+      required:
+      - approval_id
+      - tenant_id
+      - store_id
+      - subject_type
+      - subject_id
+      - status
+      - priority
+      - submitted_by
+      - submitted_at
+      title: ApprovalDetailResponse
+    ApprovalQueueItem:
+      properties:
+        approval_id:
+          type: string
+          format: uuid
+          title: Approval Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        subject_type:
+          type: string
+          title: Subject Type
+        subject_id:
+          type: string
+          format: uuid
+          title: Subject Id
+        subject_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subject Version
+        status:
+          type: string
+          title: Status
+        priority:
+          type: integer
+          title: Priority
+        submitted_by:
+          type: string
+          format: uuid
+          title: Submitted By
+        submitted_at:
+          type: string
+          format: date-time
+          title: Submitted At
+      additionalProperties: false
+      type: object
+      required:
+      - approval_id
+      - tenant_id
+      - store_id
+      - subject_type
+      - subject_id
+      - status
+      - priority
+      - submitted_by
+      - submitted_at
+      title: ApprovalQueueItem
+    ApprovalQueueResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ApprovalQueueItem'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      additionalProperties: false
+      type: object
+      required:
+      - items
+      - total
+      title: ApprovalQueueResponse
+    ApprovalResponse:
+      properties:
+        approval_id:
+          type: string
+          format: uuid
+          title: Approval Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        subject_type:
+          type: string
+          title: Subject Type
+        subject_id:
+          type: string
+          format: uuid
+          title: Subject Id
+        subject_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subject Version
+        status:
+          type: string
+          title: Status
+        priority:
+          type: integer
+          title: Priority
+        submitted_by:
+          type: string
+          format: uuid
+          title: Submitted By
+        submitted_at:
+          type: string
+          format: date-time
+          title: Submitted At
+      additionalProperties: false
+      type: object
+      required:
+      - approval_id
+      - tenant_id
+      - store_id
+      - subject_type
+      - subject_id
+      - status
+      - priority
+      - submitted_by
+      - submitted_at
+      title: ApprovalResponse
+    ApproveRequest:
+      properties:
+        expected_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Expected Version
+        comment:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Comment
+      additionalProperties: false
+      type: object
+      title: ApproveRequest
+    ApproveResponse:
+      properties:
+        approval_id:
+          type: string
+          format: uuid
+          title: Approval Id
+        state:
+          type: string
+          title: State
+          default: APPROVED
+        content_version_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Content Version Id
+        decided_at:
+          type: string
+          format: date-time
+          title: Decided At
+      additionalProperties: false
+      type: object
+      required:
+      - approval_id
+      - decided_at
+      title: ApproveResponse
+    CreateApprovalRequest:
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        subject_type:
+          type: string
+          maxLength: 40
+          title: Subject Type
+        subject_id:
+          type: string
+          format: uuid
+          title: Subject Id
+        subject_version:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Subject Version
+        priority:
+          type: integer
+          maximum: 10.0
+          minimum: 0.0
+          title: Priority
+          default: 0
+        submitted_by:
+          type: string
+          format: uuid
+          title: Submitted By
+      additionalProperties: false
+      type: object
+      required:
+      - tenant_id
+      - store_id
+      - subject_type
+      - subject_id
+      - submitted_by
+      title: CreateApprovalRequest
+    DecisionDetail:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        decision:
+          type: string
+          title: Decision
+        reason_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason Code
+        reason_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason Text
+        decided_by:
+          type: string
+          format: uuid
+          title: Decided By
+        decided_at:
+          type: string
+          format: date-time
+          title: Decided At
+        evidence_json:
+          additionalProperties: true
+          type: object
+          title: Evidence Json
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - decision
+      - decided_by
+      - decided_at
+      title: DecisionDetail
+    EmergencyTakedownRequest:
+      properties:
+        reason_code:
+          type: string
+          maxLength: 40
+          title: Reason Code
+        reason_text:
+          type: string
+          minLength: 1
+          title: Reason Text
+      additionalProperties: false
+      type: object
+      required:
+      - reason_code
+      - reason_text
+      title: EmergencyTakedownRequest
+    EmergencyTakedownResponse:
+      properties:
+        takedown_id:
+          type: string
+          format: uuid
+          title: Takedown Id
+        approval_id:
+          type: string
+          format: uuid
+          title: Approval Id
+        state:
+          type: string
+          title: State
+          default: TAKEDOWN
+        reason_code:
+          type: string
+          title: Reason Code
+        executed_at:
+          type: string
+          format: date-time
+          title: Executed At
+      additionalProperties: false
+      type: object
+      required:
+      - takedown_id
+      - approval_id
+      - reason_code
+      - executed_at
+      title: EmergencyTakedownResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    RejectRequest:
+      properties:
+        reason_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason Code
+        reason_text:
+          type: string
+          minLength: 1
+          title: Reason Text
+      additionalProperties: false
+      type: object
+      required:
+      - reason_text
+      title: RejectRequest
+    RejectResponse:
+      properties:
+        approval_id:
+          type: string
+          format: uuid
+          title: Approval Id
+        state:
+          type: string
+          title: State
+          default: REJECTED
+        reason_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason Code
+        reason_text:
+          type: string
+          title: Reason Text
+        decided_at:
+          type: string
+          format: date-time
+          title: Decided At
+      additionalProperties: false
+      type: object
+      required:
+      - approval_id
+      - reason_text
+      - decided_at
+      title: RejectResponse
+    TakedownDetail:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        subject_type:
+          type: string
+          title: Subject Type
+        subject_id:
+          type: string
+          format: uuid
+          title: Subject Id
+        reason_code:
+          type: string
+          title: Reason Code
+        reason_text:
+          type: string
+          title: Reason Text
+        executed_by:
+          type: string
+          format: uuid
+          title: Executed By
+        executed_at:
+          type: string
+          format: date-time
+          title: Executed At
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - subject_type
+      - subject_id
+      - reason_code
+      - reason_text
+      - executed_by
+      - executed_at
+      title: TakedownDetail
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer

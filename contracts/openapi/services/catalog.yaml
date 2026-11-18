@@ -1,0 +1,1388 @@
+openapi: 3.1.0
+info:
+  title: KarobarOne CATALOG Service
+  version: 0.1.0
+paths:
+  /health/live:
+    get:
+      summary: Health Live
+      description: "Liveness probe returning 200 OK (RULES.md \xA71 C2)."
+      operationId: health_live_health_live_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /health/ready:
+    get:
+      summary: Health Ready
+      description: "Readiness probe verifying DB connectivity (RULES.md \xA71 C2)."
+      operationId: health_ready_health_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /internal/events:
+    post:
+      summary: Receive Internal Event
+      description: Ingress endpoint for cross-service events per SECURITY_LAYER.md.
+      operationId: receive_internal_event_internal_events_post
+      parameters:
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /stores/{store_id}/items:
+    post:
+      summary: Create Catalog Item
+      operationId: create_catalog_item_stores__store_id__items_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCatalogItemRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateCatalogItemResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      summary: List Catalog Items
+      operationId: list_catalog_items_stores__store_id__items_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListCatalogItemsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /items/{item_id}:
+    get:
+      summary: Get Catalog Item
+      operationId: get_catalog_item_items__item_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Item Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItemDetailResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /items/{item_id}/operational:
+    patch:
+      summary: Update Operational
+      operationId: update_operational_items__item_id__operational_patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Item Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOperationalRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateOperationalResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /items/{item_id}/versions:
+    post:
+      summary: Create Version
+      operationId: create_version_items__item_id__versions_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Item Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVersionRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVersionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /items/{item_id}/versions/{version_id}/submit:
+    post:
+      summary: Submit Version
+      operationId: submit_version_items__item_id__versions__version_id__submit_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Item Id
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Version Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitVersionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /stores/{store_id}/media/upload-intents:
+    post:
+      summary: Create Media Upload Intent
+      operationId: create_media_upload_intent_stores__store_id__media_upload_intents_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMediaUploadIntentRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateMediaUploadIntentResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /items/{item_id}/unpublish:
+    post:
+      summary: Unpublish Item
+      operationId: unpublish_item_items__item_id__unpublish_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Item Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnpublishItemResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /public/stores/{store_id}/snapshot:
+    get:
+      summary: Get Public Store Snapshot
+      operationId: get_public_store_snapshot_public_stores__store_id__snapshot_get
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicSnapshotResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stores/{store_id}/items:
+    post:
+      summary: Create Catalog Item
+      operationId: create_catalog_item_api_v1_stores__store_id__items_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCatalogItemRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateCatalogItemResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      summary: List Catalog Items
+      operationId: list_catalog_items_api_v1_stores__store_id__items_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListCatalogItemsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/items/{item_id}:
+    get:
+      summary: Get Catalog Item
+      operationId: get_catalog_item_api_v1_items__item_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Item Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItemDetailResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/items/{item_id}/operational:
+    patch:
+      summary: Update Operational
+      operationId: update_operational_api_v1_items__item_id__operational_patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Item Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOperationalRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateOperationalResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/items/{item_id}/versions:
+    post:
+      summary: Create Version
+      operationId: create_version_api_v1_items__item_id__versions_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Item Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVersionRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVersionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/items/{item_id}/versions/{version_id}/submit:
+    post:
+      summary: Submit Version
+      operationId: submit_version_api_v1_items__item_id__versions__version_id__submit_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Item Id
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Version Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitVersionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stores/{store_id}/media/upload-intents:
+    post:
+      summary: Create Media Upload Intent
+      operationId: create_media_upload_intent_api_v1_stores__store_id__media_upload_intents_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMediaUploadIntentRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateMediaUploadIntentResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/items/{item_id}/unpublish:
+    post:
+      summary: Unpublish Item
+      operationId: unpublish_item_api_v1_items__item_id__unpublish_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Item Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnpublishItemResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/public/stores/{store_id}/snapshot:
+    get:
+      summary: Get Public Store Snapshot
+      operationId: get_public_store_snapshot_api_v1_public_stores__store_id__snapshot_get
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicSnapshotResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    CatalogItemDetailResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        item_type:
+          type: string
+          title: Item Type
+        price:
+          type: string
+          title: Price
+        currency_code:
+          type: string
+          title: Currency Code
+        active:
+          type: boolean
+          title: Active
+        live_version_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Live Version Id
+        draft_version_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Draft Version Id
+        live_version:
+          anyOf:
+          - $ref: '#/components/schemas/ItemVersionDetail'
+          - type: 'null'
+        draft_version:
+          anyOf:
+          - $ref: '#/components/schemas/ItemVersionDetail'
+          - type: 'null'
+        is_digital:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Digital
+        sku_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Sku Code
+        is_appointment:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Appointment
+        duration_minutes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Duration Minutes
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - tenant_id
+      - store_id
+      - item_type
+      - price
+      - currency_code
+      - active
+      - created_at
+      - updated_at
+      title: CatalogItemDetailResponse
+    CatalogItemSummary:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        item_type:
+          type: string
+          title: Item Type
+        price:
+          type: string
+          title: Price
+        currency_code:
+          type: string
+          title: Currency Code
+        active:
+          type: boolean
+          title: Active
+        live_version_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Live Version Id
+        draft_version_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Draft Version Id
+        title:
+          type: string
+          title: Title
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - tenant_id
+      - store_id
+      - item_type
+      - price
+      - currency_code
+      - active
+      - title
+      - created_at
+      title: CatalogItemSummary
+    CreateCatalogItemRequest:
+      properties:
+        item_type:
+          type: string
+          maxLength: 32
+          title: Item Type
+        operational:
+          $ref: '#/components/schemas/OperationalInput'
+        draft:
+          $ref: '#/components/schemas/DraftVersionInput'
+        product_details:
+          anyOf:
+          - $ref: '#/components/schemas/ProductDetailsInput'
+          - type: 'null'
+        service_details:
+          anyOf:
+          - $ref: '#/components/schemas/ServiceDetailsInput'
+          - type: 'null'
+      additionalProperties: false
+      type: object
+      required:
+      - item_type
+      - operational
+      - draft
+      title: CreateCatalogItemRequest
+    CreateCatalogItemResponse:
+      properties:
+        item_id:
+          type: string
+          format: uuid
+          title: Item Id
+        draft_version_id:
+          type: string
+          format: uuid
+          title: Draft Version Id
+        approval_state:
+          type: string
+          title: Approval State
+          default: DRAFT
+      additionalProperties: false
+      type: object
+      required:
+      - item_id
+      - draft_version_id
+      title: CreateCatalogItemResponse
+    CreateMediaUploadIntentRequest:
+      properties:
+        item_version_id:
+          type: string
+          format: uuid
+          title: Item Version Id
+        filename:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Filename
+        media_type:
+          type: string
+          maxLength: 16
+          title: Media Type
+      additionalProperties: false
+      type: object
+      required:
+      - item_version_id
+      - filename
+      - media_type
+      title: CreateMediaUploadIntentRequest
+    CreateMediaUploadIntentResponse:
+      properties:
+        media_id:
+          type: string
+          format: uuid
+          title: Media Id
+        storage_key:
+          type: string
+          title: Storage Key
+        upload_url:
+          type: string
+          title: Upload Url
+        public_url:
+          type: string
+          title: Public Url
+      additionalProperties: false
+      type: object
+      required:
+      - media_id
+      - storage_key
+      - upload_url
+      - public_url
+      title: CreateMediaUploadIntentResponse
+    CreateVersionRequest:
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Title
+        description:
+          type: string
+          maxLength: 10000
+          title: Description
+          default: ''
+        category_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Category Id
+      additionalProperties: false
+      type: object
+      required:
+      - title
+      title: CreateVersionRequest
+    CreateVersionResponse:
+      properties:
+        version_id:
+          type: string
+          format: uuid
+          title: Version Id
+        item_id:
+          type: string
+          format: uuid
+          title: Item Id
+        version_no:
+          type: integer
+          title: Version No
+        approval_state:
+          type: string
+          title: Approval State
+          default: DRAFT
+        title:
+          type: string
+          title: Title
+      additionalProperties: false
+      type: object
+      required:
+      - version_id
+      - item_id
+      - version_no
+      - title
+      title: CreateVersionResponse
+    DraftVersionInput:
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Title
+        description:
+          type: string
+          maxLength: 10000
+          title: Description
+          default: ''
+        category_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Category Id
+      additionalProperties: false
+      type: object
+      required:
+      - title
+      title: DraftVersionInput
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    ItemVersionDetail:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        version_no:
+          type: integer
+          title: Version No
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        category_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Category Id
+        approval_state:
+          type: string
+          title: Approval State
+        approval_request_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Approval Request Id
+        media:
+          items:
+            $ref: '#/components/schemas/MediaItemDetail'
+          type: array
+          title: Media
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - version_no
+      - title
+      - description
+      - approval_state
+      title: ItemVersionDetail
+    ListCatalogItemsResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/CatalogItemSummary'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      additionalProperties: false
+      type: object
+      required:
+      - items
+      - total
+      title: ListCatalogItemsResponse
+    MediaItemDetail:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        media_type:
+          type: string
+          title: Media Type
+        url:
+          type: string
+          title: Url
+        sort_order:
+          type: integer
+          title: Sort Order
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - media_type
+      - url
+      - sort_order
+      title: MediaItemDetail
+    OperationalInput:
+      properties:
+        price:
+          type: string
+          maxLength: 16
+          title: Price
+        currency_code:
+          type: string
+          maxLength: 3
+          minLength: 3
+          title: Currency Code
+          default: INR
+        active:
+          type: boolean
+          title: Active
+          default: true
+      additionalProperties: false
+      type: object
+      required:
+      - price
+      title: OperationalInput
+    ProductDetailsInput:
+      properties:
+        is_digital:
+          type: boolean
+          title: Is Digital
+          default: false
+        sku_code:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Sku Code
+      additionalProperties: false
+      type: object
+      title: ProductDetailsInput
+    PublicMediaItem:
+      properties:
+        media_type:
+          type: string
+          title: Media Type
+        url:
+          type: string
+          title: Url
+        sort_order:
+          type: integer
+          title: Sort Order
+      additionalProperties: false
+      type: object
+      required:
+      - media_type
+      - url
+      - sort_order
+      title: PublicMediaItem
+    PublicSnapshotItem:
+      properties:
+        item_id:
+          type: string
+          format: uuid
+          title: Item Id
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        item_type:
+          type: string
+          title: Item Type
+        price:
+          type: string
+          title: Price
+        currency_code:
+          type: string
+          title: Currency Code
+        media:
+          items:
+            $ref: '#/components/schemas/PublicMediaItem'
+          type: array
+          title: Media
+      additionalProperties: false
+      type: object
+      required:
+      - item_id
+      - title
+      - description
+      - item_type
+      - price
+      - currency_code
+      title: PublicSnapshotItem
+    PublicSnapshotResponse:
+      properties:
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        items:
+          items:
+            $ref: '#/components/schemas/PublicSnapshotItem'
+          type: array
+          title: Items
+        snapshot_at:
+          type: string
+          format: date-time
+          title: Snapshot At
+      additionalProperties: false
+      type: object
+      required:
+      - store_id
+      - items
+      - snapshot_at
+      title: PublicSnapshotResponse
+    ServiceDetailsInput:
+      properties:
+        is_appointment:
+          type: boolean
+          title: Is Appointment
+          default: false
+        duration_minutes:
+          anyOf:
+          - type: integer
+            maximum: 1440.0
+            minimum: 1.0
+          - type: 'null'
+          title: Duration Minutes
+      additionalProperties: false
+      type: object
+      title: ServiceDetailsInput
+    SubmitVersionResponse:
+      properties:
+        item_id:
+          type: string
+          format: uuid
+          title: Item Id
+        version_id:
+          type: string
+          format: uuid
+          title: Version Id
+        approval_id:
+          type: string
+          format: uuid
+          title: Approval Id
+        approval_state:
+          type: string
+          title: Approval State
+          default: PENDING
+        submitted_at:
+          type: string
+          format: date-time
+          title: Submitted At
+      additionalProperties: false
+      type: object
+      required:
+      - item_id
+      - version_id
+      - approval_id
+      - submitted_at
+      title: SubmitVersionResponse
+    UnpublishItemResponse:
+      properties:
+        item_id:
+          type: string
+          format: uuid
+          title: Item Id
+        status:
+          type: string
+          title: Status
+          default: UNPUBLISHED
+        unregistered_live_version:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Unregistered Live Version
+      additionalProperties: false
+      type: object
+      required:
+      - item_id
+      title: UnpublishItemResponse
+    UpdateOperationalRequest:
+      properties:
+        price:
+          anyOf:
+          - type: string
+            maxLength: 16
+          - type: 'null'
+          title: Price
+        currency_code:
+          anyOf:
+          - type: string
+            maxLength: 3
+            minLength: 3
+          - type: 'null'
+          title: Currency Code
+        active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Active
+      additionalProperties: false
+      type: object
+      title: UpdateOperationalRequest
+    UpdateOperationalResponse:
+      properties:
+        item_id:
+          type: string
+          format: uuid
+          title: Item Id
+        price:
+          type: string
+          title: Price
+        currency_code:
+          type: string
+          title: Currency Code
+        active:
+          type: boolean
+          title: Active
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      additionalProperties: false
+      type: object
+      required:
+      - item_id
+      - price
+      - currency_code
+      - active
+      - updated_at
+      title: UpdateOperationalResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer

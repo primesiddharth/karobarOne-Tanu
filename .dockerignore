@@ -1,0 +1,40 @@
+# Git
+.git
+.github
+
+# Python caches
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov
+
+# Environments
+.env
+.env.*
+!.env.example
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Docs (not needed in images)
+docs/
+contracts/
+deploy/k8s/
+
+# Tools (not needed in images)
+tools/generate_existing_tests_markdown.py
+tools/generate_existing_tests_pdf.py
+tools/test_e2e_platform.py
+
+# Tests (not needed in images)
+tests/
+**/tests/

@@ -1,0 +1,1476 @@
+openapi: 3.1.0
+info:
+  title: KarobarOne TENANT Service
+  version: 0.1.0
+paths:
+  /health/live:
+    get:
+      summary: Health Live
+      description: "Liveness probe returning 200 OK (RULES.md \xA71 C2)."
+      operationId: health_live_health_live_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /health/ready:
+    get:
+      summary: Health Ready
+      description: "Readiness probe verifying DB connectivity (RULES.md \xA71 C2)."
+      operationId: health_ready_health_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /internal/events:
+    post:
+      summary: Receive Internal Event
+      description: Ingress endpoint for cross-service events per SECURITY_LAYER.md.
+      operationId: receive_internal_event_internal_events_post
+      parameters:
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /tenants/register:
+    post:
+      summary: Register Tenant
+      description: Registers PAN-identified tenant; evaluates age & sets Free Store
+        entitlement.
+      operationId: register_tenant_tenants_register_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterTenantRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterTenantResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /tenants/{tenant_id}:
+    get:
+      summary: Get Tenant
+      description: Reads tenant profile and minor status.
+      operationId: get_tenant_tenants__tenant_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Tenant Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /tenants/{tenant_id}/guardians:
+    post:
+      summary: Submit Guardian
+      description: Submits Guardian details for minor tenant.
+      operationId: submit_guardian_tenants__tenant_id__guardians_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Tenant Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitGuardianRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitGuardianResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /tenants/{tenant_id}/guardians/{guardian_id}/consents:
+    post:
+      summary: Record Guardian Consent
+      description: Guardian accepts mandatory legal declarations, activating minor
+        tenant.
+      operationId: record_guardian_consent_tenants__tenant_id__guardians__guardian_id__consents_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Tenant Id
+      - name: guardian_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Guardian Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordGuardianConsentRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordGuardianConsentResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /tenants/{tenant_id}/adult-reverification:
+    post:
+      summary: Adult Reverification
+      description: Turns-18 adult reverification with fresh terms acceptance.
+      operationId: adult_reverification_tenants__tenant_id__adult_reverification_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Tenant Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdultReverificationRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdultReverificationResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /tenants/{tenant_id}/gstins:
+    post:
+      summary: Register Gstin
+      description: Registers and verifies GSTIN against tenant PAN.
+      operationId: register_gstin_tenants__tenant_id__gstins_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Tenant Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterGstinRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GstinResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      summary: List Gstins
+      description: Lists registered GSTINs for tenant.
+      operationId: list_gstins_tenants__tenant_id__gstins_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Tenant Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GstinResponse'
+                title: Response List Gstins Tenants  Tenant Id  Gstins Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /stores:
+    post:
+      summary: Create Store
+      description: Creates Free Store shell or Paid Store.
+      operationId: create_store_stores_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStoreRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /stores/{store_id}:
+    get:
+      summary: Get Store
+      description: Reads store details and mode.
+      operationId: get_store_stores__store_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /stores/{store_id}/staff:
+    post:
+      summary: Assign Store Staff
+      description: Assigns staff to store.
+      operationId: assign_store_staff_stores__store_id__staff_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignStaffRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignStaffResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /stores/{store_id}/staff/{assignment_id}:
+    delete:
+      summary: Revoke Store Staff
+      description: Revokes store staff assignment.
+      operationId: revoke_store_staff_stores__store_id__staff__assignment_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: assignment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Assignment Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /internal/gstins/{gstin_id}/bind:
+    post:
+      summary: Bind Gstin
+      description: 'Internal service endpoint: atomically binds GSTIN to store (called
+        by SUB).'
+      operationId: bind_gstin_internal_gstins__gstin_id__bind_post
+      parameters:
+      - name: gstin_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Gstin Id
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BindGstinRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /internal/scheduler/turns-18:
+    post:
+      summary: Trigger Turns 18 Job
+      description: 'Internal scheduler endpoint: evaluates minor tenants reaching
+        18 years.'
+      operationId: trigger_turns_18_job_internal_scheduler_turns_18_post
+      parameters:
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/tenants/register:
+    post:
+      summary: Register Tenant
+      description: Registers PAN-identified tenant; evaluates age & sets Free Store
+        entitlement.
+      operationId: register_tenant_api_v1_tenants_register_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterTenantRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterTenantResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/tenants/{tenant_id}:
+    get:
+      summary: Get Tenant
+      description: Reads tenant profile and minor status.
+      operationId: get_tenant_api_v1_tenants__tenant_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Tenant Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/tenants/{tenant_id}/guardians:
+    post:
+      summary: Submit Guardian
+      description: Submits Guardian details for minor tenant.
+      operationId: submit_guardian_api_v1_tenants__tenant_id__guardians_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Tenant Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitGuardianRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitGuardianResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/tenants/{tenant_id}/guardians/{guardian_id}/consents:
+    post:
+      summary: Record Guardian Consent
+      description: Guardian accepts mandatory legal declarations, activating minor
+        tenant.
+      operationId: record_guardian_consent_api_v1_tenants__tenant_id__guardians__guardian_id__consents_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Tenant Id
+      - name: guardian_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Guardian Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordGuardianConsentRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordGuardianConsentResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/tenants/{tenant_id}/adult-reverification:
+    post:
+      summary: Adult Reverification
+      description: Turns-18 adult reverification with fresh terms acceptance.
+      operationId: adult_reverification_api_v1_tenants__tenant_id__adult_reverification_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Tenant Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdultReverificationRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdultReverificationResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/tenants/{tenant_id}/gstins:
+    post:
+      summary: Register Gstin
+      description: Registers and verifies GSTIN against tenant PAN.
+      operationId: register_gstin_api_v1_tenants__tenant_id__gstins_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Tenant Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterGstinRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GstinResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      summary: List Gstins
+      description: Lists registered GSTINs for tenant.
+      operationId: list_gstins_api_v1_tenants__tenant_id__gstins_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Tenant Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GstinResponse'
+                title: Response List Gstins Api V1 Tenants  Tenant Id  Gstins Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stores:
+    post:
+      summary: Create Store
+      description: Creates Free Store shell or Paid Store.
+      operationId: create_store_api_v1_stores_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStoreRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stores/{store_id}:
+    get:
+      summary: Get Store
+      description: Reads store details and mode.
+      operationId: get_store_api_v1_stores__store_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stores/{store_id}/staff:
+    post:
+      summary: Assign Store Staff
+      description: Assigns staff to store.
+      operationId: assign_store_staff_api_v1_stores__store_id__staff_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignStaffRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignStaffResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stores/{store_id}/staff/{assignment_id}:
+    delete:
+      summary: Revoke Store Staff
+      description: Revokes store staff assignment.
+      operationId: revoke_store_staff_api_v1_stores__store_id__staff__assignment_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: assignment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Assignment Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/internal/gstins/{gstin_id}/bind:
+    post:
+      summary: Bind Gstin
+      description: 'Internal service endpoint: atomically binds GSTIN to store (called
+        by SUB).'
+      operationId: bind_gstin_api_v1_internal_gstins__gstin_id__bind_post
+      parameters:
+      - name: gstin_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Gstin Id
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BindGstinRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/internal/scheduler/turns-18:
+    post:
+      summary: Trigger Turns 18 Job
+      description: 'Internal scheduler endpoint: evaluates minor tenants reaching
+        18 years.'
+      operationId: trigger_turns_18_job_api_v1_internal_scheduler_turns_18_post
+      parameters:
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    AdultReverificationRequest:
+      properties:
+        acceptance_refs:
+          anyOf:
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+          - type: 'null'
+          title: Acceptance Refs
+      additionalProperties: false
+      type: object
+      title: AdultReverificationRequest
+    AdultReverificationResponse:
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        minor_status:
+          type: string
+          title: Minor Status
+        status:
+          type: string
+          title: Status
+      additionalProperties: false
+      type: object
+      required:
+      - tenant_id
+      - minor_status
+      - status
+      title: AdultReverificationResponse
+    AssignStaffRequest:
+      properties:
+        principal_id:
+          type: string
+          format: uuid
+          title: Principal Id
+        role_code:
+          type: string
+          title: Role Code
+          default: STORE_STAFF
+      additionalProperties: false
+      type: object
+      required:
+      - principal_id
+      title: AssignStaffRequest
+    AssignStaffResponse:
+      properties:
+        assignment_id:
+          type: string
+          format: uuid
+          title: Assignment Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        principal_id:
+          type: string
+          format: uuid
+          title: Principal Id
+        status:
+          type: string
+          title: Status
+      additionalProperties: false
+      type: object
+      required:
+      - assignment_id
+      - store_id
+      - principal_id
+      - status
+      title: AssignStaffResponse
+    BindGstinRequest:
+      properties:
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+      additionalProperties: false
+      type: object
+      required:
+      - store_id
+      title: BindGstinRequest
+    ConsentItem:
+      properties:
+        consent_type:
+          type: string
+          title: Consent Type
+          default: TERMS
+        document_code:
+          type: string
+          title: Document Code
+          default: DOC_STANDARD_TERMS
+        document_version:
+          type: string
+          title: Document Version
+          default: v1.0
+        document_hash:
+          type: string
+          maxLength: 64
+          minLength: 10
+          title: Document Hash
+      additionalProperties: false
+      type: object
+      required:
+      - document_hash
+      title: ConsentItem
+    CreateStoreRequest:
+      properties:
+        store_code:
+          type: string
+          maxLength: 32
+          minLength: 3
+          title: Store Code
+        display_name:
+          type: string
+          maxLength: 200
+          minLength: 2
+          title: Display Name
+        store_mode:
+          type: string
+          title: Store Mode
+          description: FREE_PRESENCE or PAID_COMMERCE
+          default: FREE_PRESENCE
+        gstin_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Gstin Id
+          description: Required for PAID_COMMERCE
+      additionalProperties: false
+      type: object
+      required:
+      - store_code
+      - display_name
+      title: CreateStoreRequest
+    GstinResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        gstin_masked:
+          type: string
+          title: Gstin Masked
+        state_code:
+          type: string
+          title: State Code
+        verification_status:
+          type: string
+          title: Verification Status
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - tenant_id
+      - gstin_masked
+      - state_code
+      - verification_status
+      title: GstinResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    RecordGuardianConsentRequest:
+      properties:
+        consents:
+          items:
+            $ref: '#/components/schemas/ConsentItem'
+          type: array
+          title: Consents
+        acceptance_ip:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Acceptance Ip
+      additionalProperties: false
+      type: object
+      required:
+      - consents
+      title: RecordGuardianConsentRequest
+    RecordGuardianConsentResponse:
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        guardian_id:
+          type: string
+          format: uuid
+          title: Guardian Id
+        minor_status:
+          type: string
+          title: Minor Status
+        status:
+          type: string
+          title: Status
+      additionalProperties: false
+      type: object
+      required:
+      - tenant_id
+      - guardian_id
+      - minor_status
+      - status
+      title: RecordGuardianConsentResponse
+    RegisterGstinRequest:
+      properties:
+        gstin:
+          type: string
+          maxLength: 15
+          minLength: 15
+          title: Gstin
+          description: 15-character GSTIN
+      additionalProperties: false
+      type: object
+      required:
+      - gstin
+      title: RegisterGstinRequest
+    RegisterTenantRequest:
+      properties:
+        pan:
+          type: string
+          title: Pan
+          description: 'Indian Income Tax PAN (10 characters: 5 letters, 4 digits,
+            1 letter)'
+        legal_name:
+          type: string
+          maxLength: 200
+          minLength: 2
+          title: Legal Name
+        tenant_type:
+          type: string
+          title: Tenant Type
+          description: INDIVIDUAL, BUSINESS, or OTHER
+          default: INDIVIDUAL
+        date_of_birth:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Date Of Birth
+          description: Required for minor check
+        acceptance_refs:
+          anyOf:
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+          - type: 'null'
+          title: Acceptance Refs
+      additionalProperties: false
+      type: object
+      required:
+      - pan
+      - legal_name
+      title: RegisterTenantRequest
+    RegisterTenantResponse:
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        registration_state:
+          type: string
+          title: Registration State
+        status:
+          type: string
+          title: Status
+        pan_masked:
+          type: string
+          title: Pan Masked
+        legal_name:
+          type: string
+          title: Legal Name
+      additionalProperties: false
+      type: object
+      required:
+      - tenant_id
+      - registration_state
+      - status
+      - pan_masked
+      - legal_name
+      title: RegisterTenantResponse
+    StoreResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        store_code:
+          type: string
+          title: Store Code
+        display_name:
+          type: string
+          title: Display Name
+        store_mode:
+          type: string
+          title: Store Mode
+        lifecycle_status:
+          type: string
+          title: Lifecycle Status
+        gstin_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Gstin Id
+        timezone:
+          type: string
+          title: Timezone
+        currency_code:
+          type: string
+          title: Currency Code
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - tenant_id
+      - store_code
+      - display_name
+      - store_mode
+      - lifecycle_status
+      - timezone
+      - currency_code
+      - created_at
+      title: StoreResponse
+    SubmitGuardianRequest:
+      properties:
+        full_name:
+          type: string
+          maxLength: 200
+          minLength: 2
+          title: Full Name
+        relationship_code:
+          type: string
+          title: Relationship Code
+          description: PARENT or LEGAL_GUARDIAN
+        email:
+          type: string
+          maxLength: 255
+          minLength: 5
+          title: Email
+        mobile_e164:
+          type: string
+          maxLength: 20
+          minLength: 10
+          title: Mobile E164
+      additionalProperties: false
+      type: object
+      required:
+      - full_name
+      - relationship_code
+      - email
+      - mobile_e164
+      title: SubmitGuardianRequest
+    SubmitGuardianResponse:
+      properties:
+        guardian_id:
+          type: string
+          format: uuid
+          title: Guardian Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        verification_status:
+          type: string
+          title: Verification Status
+        minor_status:
+          type: string
+          title: Minor Status
+      additionalProperties: false
+      type: object
+      required:
+      - guardian_id
+      - tenant_id
+      - verification_status
+      - minor_status
+      title: SubmitGuardianResponse
+    TenantResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        pan_masked:
+          type: string
+          title: Pan Masked
+        legal_name:
+          type: string
+          title: Legal Name
+        tenant_type:
+          type: string
+          title: Tenant Type
+        minor_status:
+          type: string
+          title: Minor Status
+        status:
+          type: string
+          title: Status
+        date_of_birth:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Date Of Birth
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - pan_masked
+      - legal_name
+      - tenant_type
+      - minor_status
+      - status
+      - created_at
+      title: TenantResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer

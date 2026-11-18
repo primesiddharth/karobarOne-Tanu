@@ -1,0 +1,67 @@
+# KarobarOne API Gateway Route Table
+# Maps incoming path prefixes or regex patterns to upstream target keys.
+# Target keys correspond to UPSTREAM_<TARGET>_URL in settings.
+# Rollback: change target to 'monolith'.
+
+routes:
+  # Specific store sub-resources
+  - pattern: "^/api/v1/stores/[^/]+/items"
+    target: "catalog"
+  - pattern: "^/api/v1/stores/[^/]+/(categories|pages|media)"
+    target: "catalog"
+  - pattern: "^/api/v1/stores/[^/]+/customers"
+    target: "customer"
+  - pattern: "^/api/v1/stores/[^/]+/(subdomain|domains|publish|domain-status)"
+    target: "domain"
+  - pattern: "^/api/v1/stores/[^/]+/inventory"
+    target: "inventory"
+
+  # IAM
+  - prefix: "/api/v1/auth"
+    target: "iam"
+  - prefix: "/api/v1/users"
+    target: "iam"
+  - prefix: "/api/v1/roles"
+    target: "iam"
+
+  # TENANT
+  - prefix: "/api/v1/tenants"
+    target: "tenant"
+  - prefix: "/api/v1/stores"
+    target: "tenant"
+
+  # APPROVAL
+  - prefix: "/api/v1/approvals"
+    target: "approval"
+
+  # CATALOG
+  - prefix: "/api/v1/items"
+    target: "catalog"
+  - prefix: "/api/v1/categories"
+    target: "catalog"
+  - prefix: "/api/v1/pages"
+    target: "catalog"
+  - prefix: "/api/v1/media"
+    target: "catalog"
+
+  # DOMAIN
+  - prefix: "/api/v1/domains"
+    target: "domain"
+  - prefix: "/api/v1/publication-routes"
+    target: "domain"
+
+  # CUSTOMER
+  - prefix: "/api/v1/customers"
+    target: "customer"
+
+  # SUBSCRIPTION
+  - prefix: "/api/v1/plans"
+    target: "subscription"
+  - prefix: "/api/v1/subscriptions"
+    target: "subscription"
+
+  # INVENTORY
+  - prefix: "/api/v1/inventory"
+    target: "inventory"
+
+default_target: "monolith"

@@ -1,0 +1,395 @@
+# render.yaml — Render Blueprint for KarobarOne Microservices Architecture
+# Source: DEPLOY.md §4.2, SERVICES.md
+services:
+  # ----------------------------------------------------------------------------
+  # Gateway (Public Facing)
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: karobar-gateway
+    runtime: docker
+    dockerfilePath: ./services/gateway/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: LOG_LEVEL
+        value: INFO
+      - key: GATEWAY_API_KEYS
+        sync: false
+      - key: UPSTREAM_IAM_URL
+        fromService: {type: pserv, name: karobar-iam, property: hostport}
+      - key: UPSTREAM_TENANT_URL
+        fromService: {type: pserv, name: karobar-tenant, property: hostport}
+      - key: UPSTREAM_APPROVAL_URL
+        fromService: {type: pserv, name: karobar-approval, property: hostport}
+      - key: UPSTREAM_CATALOG_URL
+        fromService: {type: pserv, name: karobar-catalog, property: hostport}
+      - key: UPSTREAM_DOMAIN_URL
+        fromService: {type: pserv, name: karobar-domain, property: hostport}
+      - key: UPSTREAM_CUSTOMER_URL
+        fromService: {type: pserv, name: karobar-customer, property: hostport}
+      - key: UPSTREAM_SUBSCRIPTION_URL
+        fromService: {type: pserv, name: karobar-subscription, property: hostport}
+      - key: UPSTREAM_INVENTORY_URL
+        fromService: {type: pserv, name: karobar-inventory, property: hostport}
+      - key: UPSTREAM_MONOLITH_URL
+        sync: false
+
+  # ----------------------------------------------------------------------------
+  # 1. IAM Service & Worker
+  # ----------------------------------------------------------------------------
+  - type: pserv
+    name: karobar-iam
+    runtime: docker
+    dockerfilePath: ./services/iam/Dockerfile
+    dockerContext: .
+    preDeployCommand: alembic upgrade head
+    healthCheckPath: /health/ready
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: iam
+      - key: DATABASE_URL
+        sync: false
+      - key: MIGRATION_DATABASE_URL
+        sync: false
+      - key: JWT_PRIVATE_KEY
+        sync: false
+      - key: JWT_PUBLIC_KEY
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  - type: worker
+    name: karobar-iam-worker
+    runtime: docker
+    dockerfilePath: ./services/iam/Dockerfile
+    dockerContext: .
+    dockerCommand: python -m app.worker
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: iam
+      - key: DATABASE_URL
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  # ----------------------------------------------------------------------------
+  # 2. Tenant Service & Worker
+  # ----------------------------------------------------------------------------
+  - type: pserv
+    name: karobar-tenant
+    runtime: docker
+    dockerfilePath: ./services/tenant/Dockerfile
+    dockerContext: .
+    preDeployCommand: alembic upgrade head
+    healthCheckPath: /health/ready
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: tenant
+      - key: DATABASE_URL
+        sync: false
+      - key: MIGRATION_DATABASE_URL
+        sync: false
+      - key: PAN_ENC_KEY
+        sync: false
+      - key: PAN_FP_KEY
+        sync: false
+      - key: JWT_PUBLIC_KEY
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  - type: worker
+    name: karobar-tenant-worker
+    runtime: docker
+    dockerfilePath: ./services/tenant/Dockerfile
+    dockerContext: .
+    dockerCommand: python -m app.worker
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: tenant
+      - key: DATABASE_URL
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  # ----------------------------------------------------------------------------
+  # 3. Approval Service & Worker
+  # ----------------------------------------------------------------------------
+  - type: pserv
+    name: karobar-approval
+    runtime: docker
+    dockerfilePath: ./services/approval/Dockerfile
+    dockerContext: .
+    preDeployCommand: alembic upgrade head
+    healthCheckPath: /health/ready
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: approval
+      - key: DATABASE_URL
+        sync: false
+      - key: MIGRATION_DATABASE_URL
+        sync: false
+      - key: JWT_PUBLIC_KEY
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  - type: worker
+    name: karobar-approval-worker
+    runtime: docker
+    dockerfilePath: ./services/approval/Dockerfile
+    dockerContext: .
+    dockerCommand: python -m app.worker
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: approval
+      - key: DATABASE_URL
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  # ----------------------------------------------------------------------------
+  # 4. Catalog Service & Worker
+  # ----------------------------------------------------------------------------
+  - type: pserv
+    name: karobar-catalog
+    runtime: docker
+    dockerfilePath: ./services/catalog/Dockerfile
+    dockerContext: .
+    preDeployCommand: alembic upgrade head
+    healthCheckPath: /health/ready
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: catalog
+      - key: DATABASE_URL
+        sync: false
+      - key: MIGRATION_DATABASE_URL
+        sync: false
+      - key: JWT_PUBLIC_KEY
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  - type: worker
+    name: karobar-catalog-worker
+    runtime: docker
+    dockerfilePath: ./services/catalog/Dockerfile
+    dockerContext: .
+    dockerCommand: python -m app.worker
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: catalog
+      - key: DATABASE_URL
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  # ----------------------------------------------------------------------------
+  # 5. Domain Service & Worker
+  # ----------------------------------------------------------------------------
+  - type: pserv
+    name: karobar-domain
+    runtime: docker
+    dockerfilePath: ./services/domain/Dockerfile
+    dockerContext: .
+    preDeployCommand: alembic upgrade head
+    healthCheckPath: /health/ready
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: domain
+      - key: DATABASE_URL
+        sync: false
+      - key: MIGRATION_DATABASE_URL
+        sync: false
+      - key: JWT_PUBLIC_KEY
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  - type: worker
+    name: karobar-domain-worker
+    runtime: docker
+    dockerfilePath: ./services/domain/Dockerfile
+    dockerContext: .
+    dockerCommand: python -m app.worker
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: domain
+      - key: DATABASE_URL
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  # ----------------------------------------------------------------------------
+  # 6. Customer Service & Worker
+  # ----------------------------------------------------------------------------
+  - type: pserv
+    name: karobar-customer
+    runtime: docker
+    dockerfilePath: ./services/customer/Dockerfile
+    dockerContext: .
+    preDeployCommand: alembic upgrade head
+    healthCheckPath: /health/ready
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: customer
+      - key: DATABASE_URL
+        sync: false
+      - key: MIGRATION_DATABASE_URL
+        sync: false
+      - key: JWT_PUBLIC_KEY
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  - type: worker
+    name: karobar-customer-worker
+    runtime: docker
+    dockerfilePath: ./services/customer/Dockerfile
+    dockerContext: .
+    dockerCommand: python -m app.worker
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: customer
+      - key: DATABASE_URL
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  # ----------------------------------------------------------------------------
+  # 7. Subscription Service & Worker
+  # ----------------------------------------------------------------------------
+  - type: pserv
+    name: karobar-subscription
+    runtime: docker
+    dockerfilePath: ./services/subscription/Dockerfile
+    dockerContext: .
+    preDeployCommand: alembic upgrade head
+    healthCheckPath: /health/ready
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: subscription
+      - key: DATABASE_URL
+        sync: false
+      - key: MIGRATION_DATABASE_URL
+        sync: false
+      - key: JWT_PUBLIC_KEY
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  - type: worker
+    name: karobar-subscription-worker
+    runtime: docker
+    dockerfilePath: ./services/subscription/Dockerfile
+    dockerContext: .
+    dockerCommand: python -m app.worker
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: subscription
+      - key: DATABASE_URL
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  # ----------------------------------------------------------------------------
+  # 8. Inventory Service & Worker
+  # ----------------------------------------------------------------------------
+  - type: pserv
+    name: karobar-inventory
+    runtime: docker
+    dockerfilePath: ./services/inventory/Dockerfile
+    dockerContext: .
+    preDeployCommand: alembic upgrade head
+    healthCheckPath: /health/ready
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: inventory
+      - key: DATABASE_URL
+        sync: false
+      - key: MIGRATION_DATABASE_URL
+        sync: false
+      - key: JWT_PUBLIC_KEY
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false
+
+  - type: worker
+    name: karobar-inventory-worker
+    runtime: docker
+    dockerfilePath: ./services/inventory/Dockerfile
+    dockerContext: .
+    dockerCommand: python -m app.worker
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVICE_NAME
+        value: inventory
+      - key: DATABASE_URL
+        sync: false
+      - key: MY_SERVICE_KEY
+        sync: false
+      - key: SERVICE_KEY_HASHES
+        sync: false

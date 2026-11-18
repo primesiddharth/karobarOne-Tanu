@@ -1,0 +1,26 @@
+# subscriptions.yaml — Mapping of consumers to subscribed event types
+# Source: microservice/docs/SERVICES.md
+# Consumers must register an inbox deduplication handler for each subscribed type.
+
+subscriptions:
+  tenant:
+    - identity.principal.created.v1
+  catalog:
+    - entitlement.changed.v1
+    - content.approved.v1
+    - content.rejected.v1
+    - content.emergency-takedown.v1
+    - content.unpublished.v1
+  domain:
+    - store.created.v1
+    - subscription.activated.v1
+    - subscription.converted-to-free.v1
+    - content.approved.v1
+    - entitlement.changed.v1
+  subscription:
+    - store.created.v1
+    - finance.platform-payment-recorded.v1
+  inventory:
+    - catalog.item-created.v1
+    - order.cancelled.v1
+    - refund.completed.v1

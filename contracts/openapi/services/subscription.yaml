@@ -1,0 +1,1287 @@
+openapi: 3.1.0
+info:
+  title: KarobarOne SUBSCRIPTION Service
+  version: 0.1.0
+paths:
+  /health/live:
+    get:
+      summary: Health Live
+      description: "Liveness probe returning 200 OK (RULES.md \xA71 C2)."
+      operationId: health_live_health_live_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /health/ready:
+    get:
+      summary: Health Ready
+      description: "Readiness probe verifying DB connectivity (RULES.md \xA71 C2)."
+      operationId: health_ready_health_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /metrics:
+    get:
+      summary: Get Metrics
+      description: "Internal Prometheus metrics endpoint (RULES.md \xA712)."
+      operationId: get_metrics_metrics_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            text/plain:
+              schema:
+                type: string
+  /internal/events:
+    post:
+      summary: Receive Internal Event
+      description: Ingress endpoint for cross-service events per SECURITY_LAYER.md.
+      operationId: receive_internal_event_internal_events_post
+      parameters:
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/plans:
+    get:
+      summary: List current plan offerings
+      description: Lists available commercial plan versions and their limits (SUB-001).
+      operationId: SUB_001
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlansListResponse'
+  /api/v1/stores/{store_id}/subscriptions/activation-quote:
+    post:
+      summary: Calculate first activation
+      description: Calculates first paid activation quote (SUB-002, AC-042, AC-043).
+      operationId: SUB_002
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Correlation-Id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Correlation-Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivationQuoteRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationQuoteResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stores/{store_id}/subscriptions/activate:
+    post:
+      summary: Activate paid subscription after payment
+      description: Activates paid subscription after payment confirmation (SUB-003,
+        AC-041, AC-042, AC-043).
+      operationId: SUB_003
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Correlation-Id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Correlation-Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateSubscriptionRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivateSubscriptionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stores/{store_id}/entitlements:
+    get:
+      summary: Resolve current capabilities
+      description: Resolves authoritative entitlement capabilities for a store (SUB-004).
+      operationId: SUB_004
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntitlementsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/subscriptions/{subscription_id}:
+    get:
+      summary: Read subscription lifecycle
+      description: Reads subscription aggregate, period status, and advance balance
+        (SUB-005).
+      operationId: SUB_005
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: subscription_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Subscription Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionDetailResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/subscriptions/{id}/cancel:
+    post:
+      summary: Record initial cancellation notice
+      description: Records cancellation notice before Period 3 (SUB-006, AC-045..048).
+      operationId: SUB_006
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Correlation-Id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Correlation-Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelSubscriptionRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelSubscriptionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/subscriptions/{id}/upgrade-quote:
+    post:
+      summary: Calculate upgrade
+      description: Calculates immutable upgrade quote (SUB-007, AC-069..075).
+      operationId: SUB_007
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Correlation-Id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Correlation-Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpgradeQuoteRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpgradeQuoteResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/subscriptions/{id}/upgrade:
+    post:
+      summary: Apply approved/paid upgrade
+      description: Applies approved/paid upgrade (SUB-008).
+      operationId: SUB_008
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Correlation-Id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Correlation-Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyUpgradeRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplyUpgradeResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/subscriptions/{id}/downgrade:
+    post:
+      summary: Request future downgrade
+      description: Requests future billing boundary downgrade (SUB-009, SM PLAN-05).
+      operationId: SUB_009
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Correlation-Id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Correlation-Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DowngradeRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DowngradeResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/subscriptions/{id}/reactivate:
+    post:
+      summary: Reactivate after Free conversion
+      description: Reactivates subscription after non-payment Free conversion (SUB-010,
+        AC-065..068).
+      operationId: SUB_010
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Correlation-Id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Correlation-Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactivateSubscriptionRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactivateSubscriptionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/upgrade-discounts/{request_id}/decision:
+    post:
+      summary: Approve/reject setup-fee discount
+      description: Platform Owner decision on upgrade setup discount (SUB-011, AC-072..075).
+      operationId: SUB_011
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: request_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Request Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Correlation-Id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Correlation-Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscountDecisionRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscountDecisionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    ActivateSubscriptionRequest:
+      properties:
+        plan_code:
+          type: string
+          maxLength: 24
+          minLength: 2
+          title: Plan Code
+        quote_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Quote Id
+        gstin_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Gstin Id
+        payment_reference:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Payment Reference
+      additionalProperties: false
+      type: object
+      required:
+      - plan_code
+      title: ActivateSubscriptionRequest
+    ActivateSubscriptionResponse:
+      properties:
+        subscription_id:
+          type: string
+          format: uuid
+          title: Subscription Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        plan_code:
+          type: string
+          title: Plan Code
+        state:
+          type: string
+          title: State
+        current_period_no:
+          type: integer
+          title: Current Period No
+        starts_at:
+          type: string
+          format: date-time
+          title: Starts At
+        ends_at:
+          type: string
+          format: date-time
+          title: Ends At
+        total_paid:
+          type: string
+          title: Total Paid
+      additionalProperties: false
+      type: object
+      required:
+      - subscription_id
+      - store_id
+      - plan_code
+      - state
+      - current_period_no
+      - starts_at
+      - ends_at
+      - total_paid
+      title: ActivateSubscriptionResponse
+    ActivationQuoteRequest:
+      properties:
+        plan_code:
+          type: string
+          maxLength: 24
+          minLength: 2
+          title: Plan Code
+        gstin_id:
+          type: string
+          format: uuid
+          title: Gstin Id
+      additionalProperties: false
+      type: object
+      required:
+      - plan_code
+      - gstin_id
+      title: ActivationQuoteRequest
+    ActivationQuoteResponse:
+      properties:
+        quote_id:
+          type: string
+          format: uuid
+          title: Quote Id
+        plan_code:
+          type: string
+          title: Plan Code
+        period_1:
+          $ref: '#/components/schemas/AmountComponentDto'
+        third_period_advance:
+          $ref: '#/components/schemas/AmountComponentDto'
+        setup_fee:
+          $ref: '#/components/schemas/SetupFeeComponentDto'
+        gst:
+          $ref: '#/components/schemas/GstComponentDto'
+        total:
+          $ref: '#/components/schemas/TotalComponentDto'
+        expires_at:
+          type: string
+          format: date-time
+          title: Expires At
+      additionalProperties: false
+      type: object
+      required:
+      - quote_id
+      - plan_code
+      - period_1
+      - third_period_advance
+      - setup_fee
+      - gst
+      - total
+      - expires_at
+      title: ActivationQuoteResponse
+    AmountComponentDto:
+      properties:
+        amount:
+          type: string
+          title: Amount
+        amount_paise:
+          type: integer
+          title: Amount Paise
+      additionalProperties: false
+      type: object
+      required:
+      - amount
+      - amount_paise
+      title: AmountComponentDto
+    ApplyUpgradeRequest:
+      properties:
+        quote_id:
+          type: string
+          format: uuid
+          title: Quote Id
+      additionalProperties: false
+      type: object
+      required:
+      - quote_id
+      title: ApplyUpgradeRequest
+    ApplyUpgradeResponse:
+      properties:
+        subscription_id:
+          type: string
+          format: uuid
+          title: Subscription Id
+        plan_code:
+          type: string
+          title: Plan Code
+        state:
+          type: string
+          title: State
+        effective_at:
+          type: string
+          format: date-time
+          title: Effective At
+      additionalProperties: false
+      type: object
+      required:
+      - subscription_id
+      - plan_code
+      - state
+      - effective_at
+      title: ApplyUpgradeResponse
+    CancelSubscriptionRequest:
+      properties:
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+        expected_version:
+          type: integer
+          minimum: 0.0
+          title: Expected Version
+      additionalProperties: false
+      type: object
+      required:
+      - expected_version
+      title: CancelSubscriptionRequest
+    CancelSubscriptionResponse:
+      properties:
+        subscription_id:
+          type: string
+          format: uuid
+          title: Subscription Id
+        notice_recorded_at:
+          type: string
+          format: date-time
+          title: Notice Recorded At
+        paid_through_period:
+          type: integer
+          title: Paid Through Period
+        additional_period_3_due:
+          type: string
+          title: Additional Period 3 Due
+        end_after_period:
+          type: integer
+          title: End After Period
+      additionalProperties: false
+      type: object
+      required:
+      - subscription_id
+      - notice_recorded_at
+      - paid_through_period
+      - additional_period_3_due
+      - end_after_period
+      title: CancelSubscriptionResponse
+    DiscountDecisionRequest:
+      properties:
+        approved:
+          type: boolean
+          title: Approved
+        approved_amount:
+          type: string
+          title: Approved Amount
+          default: '0.00'
+        reason:
+          type: string
+          title: Reason
+      additionalProperties: false
+      type: object
+      required:
+      - approved
+      - reason
+      title: DiscountDecisionRequest
+    DiscountDecisionResponse:
+      properties:
+        quote_id:
+          type: string
+          format: uuid
+          title: Quote Id
+        requested_discount:
+          type: string
+          title: Requested Discount
+        approved_amount:
+          type: string
+          title: Approved Amount
+        net_setup_fee:
+          type: string
+          title: Net Setup Fee
+        total_with_tax:
+          type: string
+          title: Total With Tax
+        decided_at:
+          type: string
+          format: date-time
+          title: Decided At
+      additionalProperties: false
+      type: object
+      required:
+      - quote_id
+      - requested_discount
+      - approved_amount
+      - net_setup_fee
+      - total_with_tax
+      - decided_at
+      title: DiscountDecisionResponse
+    DowngradeRequest:
+      properties:
+        target_plan_code:
+          type: string
+          title: Target Plan Code
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+      additionalProperties: false
+      type: object
+      required:
+      - target_plan_code
+      title: DowngradeRequest
+    DowngradeResponse:
+      properties:
+        request_id:
+          type: string
+          format: uuid
+          title: Request Id
+        subscription_id:
+          type: string
+          format: uuid
+          title: Subscription Id
+        from_plan:
+          type: string
+          title: From Plan
+        to_plan:
+          type: string
+          title: To Plan
+        status:
+          type: string
+          title: Status
+        effective_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Effective At
+      additionalProperties: false
+      type: object
+      required:
+      - request_id
+      - subscription_id
+      - from_plan
+      - to_plan
+      - status
+      title: DowngradeResponse
+    EntitlementsResponse:
+      properties:
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        plan_code:
+          type: string
+          title: Plan Code
+        state:
+          type: string
+          title: State
+        commerce_enabled:
+          type: boolean
+          title: Commerce Enabled
+        showcase_limit:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Showcase Limit
+        max_images_per_item:
+          type: integer
+          title: Max Images Per Item
+        max_videos_per_item:
+          type: integer
+          title: Max Videos Per Item
+        custom_domain_allowed:
+          type: boolean
+          title: Custom Domain Allowed
+        blog_allowed:
+          type: boolean
+          title: Blog Allowed
+        effective_from:
+          type: string
+          format: date-time
+          title: Effective From
+      additionalProperties: false
+      type: object
+      required:
+      - store_id
+      - plan_code
+      - state
+      - commerce_enabled
+      - max_images_per_item
+      - max_videos_per_item
+      - custom_domain_allowed
+      - blog_allowed
+      - effective_from
+      title: EntitlementsResponse
+    GstComponentDto:
+      properties:
+        rate:
+          type: number
+          title: Rate
+        amount:
+          type: string
+          title: Amount
+        amount_paise:
+          type: integer
+          title: Amount Paise
+      additionalProperties: false
+      type: object
+      required:
+      - rate
+      - amount
+      - amount_paise
+      title: GstComponentDto
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    PlanDto:
+      properties:
+        plan_code:
+          type: string
+          title: Plan Code
+        version_no:
+          type: integer
+          title: Version No
+        price_amount:
+          type: string
+          title: Price Amount
+        price_paise:
+          type: integer
+          title: Price Paise
+        period_days:
+          type: integer
+          title: Period Days
+        commission_rate:
+          type: number
+          title: Commission Rate
+        entitlements:
+          items:
+            $ref: '#/components/schemas/PlanEntitlementDto'
+          type: array
+          title: Entitlements
+      additionalProperties: false
+      type: object
+      required:
+      - plan_code
+      - version_no
+      - price_amount
+      - price_paise
+      - period_days
+      - commission_rate
+      title: PlanDto
+    PlanEntitlementDto:
+      properties:
+        entitlement_code:
+          type: string
+          title: Entitlement Code
+        hard_limit:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Hard Limit
+        technical_limit:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Technical Limit
+        value:
+          additionalProperties: true
+          type: object
+          title: Value
+      additionalProperties: false
+      type: object
+      required:
+      - entitlement_code
+      title: PlanEntitlementDto
+    PlansListResponse:
+      properties:
+        plans:
+          items:
+            $ref: '#/components/schemas/PlanDto'
+          type: array
+          title: Plans
+      additionalProperties: false
+      type: object
+      required:
+      - plans
+      title: PlansListResponse
+    ReactivateSubscriptionRequest:
+      properties:
+        target_plan_code:
+          type: string
+          title: Target Plan Code
+        gstin_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Gstin Id
+      additionalProperties: false
+      type: object
+      required:
+      - target_plan_code
+      title: ReactivateSubscriptionRequest
+    ReactivateSubscriptionResponse:
+      properties:
+        subscription_id:
+          type: string
+          format: uuid
+          title: Subscription Id
+        plan_code:
+          type: string
+          title: Plan Code
+        state:
+          type: string
+          title: State
+        period_fee:
+          type: string
+          title: Period Fee
+        reactivation_setup_fee:
+          type: string
+          title: Reactivation Setup Fee
+        total:
+          type: string
+          title: Total
+        starts_at:
+          type: string
+          format: date-time
+          title: Starts At
+        ends_at:
+          type: string
+          format: date-time
+          title: Ends At
+      additionalProperties: false
+      type: object
+      required:
+      - subscription_id
+      - plan_code
+      - state
+      - period_fee
+      - reactivation_setup_fee
+      - total
+      - starts_at
+      - ends_at
+      title: ReactivateSubscriptionResponse
+    SetupFeeComponentDto:
+      properties:
+        amount:
+          type: string
+          title: Amount
+        amount_paise:
+          type: integer
+          title: Amount Paise
+        is_complimentary:
+          type: boolean
+          title: Is Complimentary
+      additionalProperties: false
+      type: object
+      required:
+      - amount
+      - amount_paise
+      - is_complimentary
+      title: SetupFeeComponentDto
+    SubscriptionDetailResponse:
+      properties:
+        subscription_id:
+          type: string
+          format: uuid
+          title: Subscription Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        plan_code:
+          type: string
+          title: Plan Code
+        state:
+          type: string
+          title: State
+        activation_sequence:
+          type: integer
+          title: Activation Sequence
+        first_paid_activated_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: First Paid Activated At
+        current_period_no:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Current Period No
+        current_period:
+          anyOf:
+          - $ref: '#/components/schemas/SubscriptionPeriodDto'
+          - type: 'null'
+        advance_balance:
+          type: string
+          title: Advance Balance
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      additionalProperties: false
+      type: object
+      required:
+      - subscription_id
+      - store_id
+      - tenant_id
+      - plan_code
+      - state
+      - activation_sequence
+      - advance_balance
+      - created_at
+      - updated_at
+      title: SubscriptionDetailResponse
+    SubscriptionPeriodDto:
+      properties:
+        period_no:
+          type: integer
+          title: Period No
+        starts_at:
+          type: string
+          format: date-time
+          title: Starts At
+        ends_at:
+          type: string
+          format: date-time
+          title: Ends At
+        entitlement_status:
+          type: string
+          title: Entitlement Status
+        charge_mode:
+          type: string
+          title: Charge Mode
+        amount_due:
+          type: string
+          title: Amount Due
+      additionalProperties: false
+      type: object
+      required:
+      - period_no
+      - starts_at
+      - ends_at
+      - entitlement_status
+      - charge_mode
+      - amount_due
+      title: SubscriptionPeriodDto
+    TotalComponentDto:
+      properties:
+        amount:
+          type: string
+          title: Amount
+        amount_paise:
+          type: integer
+          title: Amount Paise
+        amount_ex_tax_paise:
+          type: integer
+          title: Amount Ex Tax Paise
+      additionalProperties: false
+      type: object
+      required:
+      - amount
+      - amount_paise
+      - amount_ex_tax_paise
+      title: TotalComponentDto
+    UpgradeQuoteRequest:
+      properties:
+        target_plan_code:
+          type: string
+          enum:
+          - COMMERCE
+          - GROWTH
+          - SCALE_AI
+          title: Target Plan Code
+        effective:
+          type: string
+          const: IMMEDIATE
+          title: Effective
+          default: IMMEDIATE
+      additionalProperties: false
+      type: object
+      required:
+      - target_plan_code
+      title: UpgradeQuoteRequest
+    UpgradeQuoteResponse:
+      properties:
+        quote_id:
+          type: string
+          format: uuid
+          title: Quote Id
+        lower_price:
+          type: string
+          title: Lower Price
+        higher_price:
+          type: string
+          title: Higher Price
+        days_remaining:
+          type: integer
+          title: Days Remaining
+        prorated_difference:
+          type: string
+          title: Prorated Difference
+        advance_top_up:
+          type: string
+          title: Advance Top Up
+        gross_upgrade_setup_fee:
+          type: string
+          title: Gross Upgrade Setup Fee
+        approved_discount:
+          type: string
+          title: Approved Discount
+        net_setup_fee:
+          type: string
+          title: Net Setup Fee
+        total_before_gst:
+          type: string
+          title: Total Before Gst
+        total_with_tax:
+          type: string
+          title: Total With Tax
+      additionalProperties: false
+      type: object
+      required:
+      - quote_id
+      - lower_price
+      - higher_price
+      - days_remaining
+      - prorated_difference
+      - advance_top_up
+      - gross_upgrade_setup_fee
+      - approved_discount
+      - net_setup_fee
+      - total_before_gst
+      - total_with_tax
+      title: UpgradeQuoteResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer

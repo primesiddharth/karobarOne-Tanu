@@ -1,0 +1,963 @@
+asyncapi: 2.6.0
+info:
+  title: KarobarOne Event Backbone AsyncAPI Specification
+  version: 1.0.0
+  description: Master event contract derived from KarobarOne REST API & Kafka Event
+    Contract Specification Appendix B.
+servers:
+  development:
+    url: localhost:9092
+    protocol: kafka
+    description: Local development Kafka cluster
+channels:
+  identity.lifecycle:
+    description: Topic for identity.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: identity.principal.created.v1
+          title: identity.principal.created.v1
+          summary: Published by IAM
+          payload:
+            ? ''
+            : ./schemas/identity.principal.created.v1.json
+        - name: identity.session.revoked.v1
+          title: identity.session.revoked.v1
+          summary: Published by IAM
+          payload:
+            ? ''
+            : ./schemas/identity.session.revoked.v1.json
+        - name: identity.role-assigned.v1
+          title: identity.role-assigned.v1
+          summary: Published by IAM
+          payload:
+            ? ''
+            : ./schemas/identity.role-assigned.v1.json
+        - name: identity.role-revoked.v1
+          title: identity.role-revoked.v1
+          summary: Published by IAM
+          payload:
+            ? ''
+            : ./schemas/identity.role-revoked.v1.json
+        - name: identity.otp.verified.v1
+          title: identity.otp.verified.v1
+          summary: Published by IAM
+          payload:
+            ? ''
+            : ./schemas/identity.otp.verified.v1.json
+        - name: identity.security-event.recorded.v1
+          title: identity.security-event.recorded.v1
+          summary: Published by IAM
+          payload:
+            ? ''
+            : ./schemas/identity.security-event.recorded.v1.json
+  tenant.lifecycle:
+    description: Topic for tenant.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: tenant.registration-started.v1
+          title: tenant.registration-started.v1
+          summary: Published by TEN
+          payload:
+            ? ''
+            : ./schemas/tenant.registration-started.v1.json
+        - name: tenant.activated.v1
+          title: tenant.activated.v1
+          summary: Published by TEN
+          payload:
+            ? ''
+            : ./schemas/tenant.activated.v1.json
+        - name: tenant.guardian-required.v1
+          title: tenant.guardian-required.v1
+          summary: Published by TEN
+          payload:
+            ? ''
+            : ./schemas/tenant.guardian-required.v1.json
+        - name: guardian.verification-started.v1
+          title: guardian.verification-started.v1
+          summary: Published by TEN
+          payload:
+            ? ''
+            : ./schemas/guardian.verification-started.v1.json
+        - name: guardian.consent.accepted.v1
+          title: guardian.consent.accepted.v1
+          summary: Published by TEN
+          payload:
+            ? ''
+            : ./schemas/guardian.consent.accepted.v1.json
+        - name: tenant.adult-reverified.v1
+          title: tenant.adult-reverified.v1
+          summary: Published by TEN
+          payload:
+            ? ''
+            : ./schemas/tenant.adult-reverified.v1.json
+        - name: gstin.verified.v1
+          title: gstin.verified.v1
+          summary: Published by TEN
+          payload:
+            ? ''
+            : ./schemas/gstin.verified.v1.json
+        - name: store.created.v1
+          title: store.created.v1
+          summary: Published by TEN
+          payload:
+            ? ''
+            : ./schemas/store.created.v1.json
+        - name: store.free-entitlement-consumed.v1
+          title: store.free-entitlement-consumed.v1
+          summary: Published by TEN
+          payload:
+            ? ''
+            : ./schemas/store.free-entitlement-consumed.v1.json
+        - name: store.staff-assigned.v1
+          title: store.staff-assigned.v1
+          summary: Published by TEN
+          payload:
+            ? ''
+            : ./schemas/store.staff-assigned.v1.json
+  subscription.lifecycle:
+    description: Topic for subscription.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: subscription.activation-quote-created.v1
+          title: subscription.activation-quote-created.v1
+          summary: Published by SUB
+          payload:
+            ? ''
+            : ./schemas/subscription.activation-quote-created.v1.json
+        - name: subscription.activated.v1
+          title: subscription.activated.v1
+          summary: Published by SUB
+          payload:
+            ? ''
+            : ./schemas/subscription.activated.v1.json
+        - name: subscription.period-started.v1
+          title: subscription.period-started.v1
+          summary: Published by SUB
+          payload:
+            ? ''
+            : ./schemas/subscription.period-started.v1.json
+        - name: subscription.payment-due.v1
+          title: subscription.payment-due.v1
+          summary: Published by SUB
+          payload:
+            ? ''
+            : ./schemas/subscription.payment-due.v1.json
+        - name: subscription.grace-entered.v1
+          title: subscription.grace-entered.v1
+          summary: Published by SUB
+          payload:
+            ? ''
+            : ./schemas/subscription.grace-entered.v1.json
+        - name: subscription.expired.v1
+          title: subscription.expired.v1
+          summary: Published by SUB
+          payload:
+            ? ''
+            : ./schemas/subscription.expired.v1.json
+        - name: subscription.converted-to-free.v1
+          title: subscription.converted-to-free.v1
+          summary: Published by SUB
+          payload:
+            ? ''
+            : ./schemas/subscription.converted-to-free.v1.json
+        - name: subscription.cancellation-notice-recorded.v1
+          title: subscription.cancellation-notice-recorded.v1
+          summary: Published by SUB
+          payload:
+            ? ''
+            : ./schemas/subscription.cancellation-notice-recorded.v1.json
+        - name: subscription.upgrade-quote-created.v1
+          title: subscription.upgrade-quote-created.v1
+          summary: Published by SUB
+          payload:
+            ? ''
+            : ./schemas/subscription.upgrade-quote-created.v1.json
+        - name: subscription.upgraded.v1
+          title: subscription.upgraded.v1
+          summary: Published by SUB
+          payload:
+            ? ''
+            : ./schemas/subscription.upgraded.v1.json
+        - name: subscription.downgrade-requested.v1
+          title: subscription.downgrade-requested.v1
+          summary: Published by SUB
+          payload:
+            ? ''
+            : ./schemas/subscription.downgrade-requested.v1.json
+        - name: subscription.downgraded.v1
+          title: subscription.downgraded.v1
+          summary: Published by SUB
+          payload:
+            ? ''
+            : ./schemas/subscription.downgraded.v1.json
+        - name: subscription.reactivated.v1
+          title: subscription.reactivated.v1
+          summary: Published by SUB
+          payload:
+            ? ''
+            : ./schemas/subscription.reactivated.v1.json
+  entitlement.changed:
+    description: Topic for entitlement.changed event stream
+    publish:
+      message:
+        oneOf:
+        - name: entitlement.changed.v1
+          title: entitlement.changed.v1
+          summary: Published by SUB
+          payload:
+            ? ''
+            : ./schemas/entitlement.changed.v1.json
+  domain.lifecycle:
+    description: Topic for domain.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: domain.subdomain-assigned.v1
+          title: domain.subdomain-assigned.v1
+          summary: Published by DOM
+          payload:
+            ? ''
+            : ./schemas/domain.subdomain-assigned.v1.json
+        - name: domain.options-checked.v1
+          title: domain.options-checked.v1
+          summary: Published by DOM
+          payload:
+            ? ''
+            : ./schemas/domain.options-checked.v1.json
+        - name: domain.selected.v1
+          title: domain.selected.v1
+          summary: Published by DOM
+          payload:
+            ? ''
+            : ./schemas/domain.selected.v1.json
+        - name: domain.purchased.v1
+          title: domain.purchased.v1
+          summary: Published by DOM
+          payload:
+            ? ''
+            : ./schemas/domain.purchased.v1.json
+        - name: domain.dns-verified.v1
+          title: domain.dns-verified.v1
+          summary: Published by DOM
+          payload:
+            ? ''
+            : ./schemas/domain.dns-verified.v1.json
+        - name: domain.activated.v1
+          title: domain.activated.v1
+          summary: Published by DOM
+          payload:
+            ? ''
+            : ./schemas/domain.activated.v1.json
+        - name: domain.stopped.v1
+          title: domain.stopped.v1
+          summary: Published by DOM
+          payload:
+            ? ''
+            : ./schemas/domain.stopped.v1.json
+        - name: domain.transfer-review-opened.v1
+          title: domain.transfer-review-opened.v1
+          summary: Published by DOM
+          payload:
+            ? ''
+            : ./schemas/domain.transfer-review-opened.v1.json
+        - name: store.published.v1
+          title: store.published.v1
+          summary: Published by DOM
+          payload:
+            ? ''
+            : ./schemas/store.published.v1.json
+  catalog.lifecycle:
+    description: Topic for catalog.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: catalog.item-created.v1
+          title: catalog.item-created.v1
+          summary: Published by CAT
+          payload:
+            ? ''
+            : ./schemas/catalog.item-created.v1.json
+        - name: catalog.item-operational-changed.v1
+          title: catalog.item-operational-changed.v1
+          summary: Published by CAT
+          payload:
+            ? ''
+            : ./schemas/catalog.item-operational-changed.v1.json
+        - name: catalog.version-created.v1
+          title: catalog.version-created.v1
+          summary: Published by CAT
+          payload:
+            ? ''
+            : ./schemas/catalog.version-created.v1.json
+        - name: catalog.item-unpublished.v1
+          title: catalog.item-unpublished.v1
+          summary: Published by CAT
+          payload:
+            ? ''
+            : ./schemas/catalog.item-unpublished.v1.json
+        - name: catalog.media-uploaded.v1
+          title: catalog.media-uploaded.v1
+          summary: Published by CAT
+          payload:
+            ? ''
+            : ./schemas/catalog.media-uploaded.v1.json
+        - name: storefront.snapshot-invalidated.v1
+          title: storefront.snapshot-invalidated.v1
+          summary: Published by CAT
+          payload:
+            ? ''
+            : ./schemas/storefront.snapshot-invalidated.v1.json
+  approval.lifecycle:
+    description: Topic for approval.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: content.submitted.v1
+          title: content.submitted.v1
+          summary: Published by APR
+          payload:
+            ? ''
+            : ./schemas/content.submitted.v1.json
+        - name: content.approved.v1
+          title: content.approved.v1
+          summary: Published by APR
+          payload:
+            ? ''
+            : ./schemas/content.approved.v1.json
+        - name: content.rejected.v1
+          title: content.rejected.v1
+          summary: Published by APR
+          payload:
+            ? ''
+            : ./schemas/content.rejected.v1.json
+        - name: content.resubmitted.v1
+          title: content.resubmitted.v1
+          summary: Published by APR
+          payload:
+            ? ''
+            : ./schemas/content.resubmitted.v1.json
+        - name: content.emergency-takedown.v1
+          title: content.emergency-takedown.v1
+          summary: Published by APR
+          payload:
+            ? ''
+            : ./schemas/content.emergency-takedown.v1.json
+        - name: content.unpublished.v1
+          title: content.unpublished.v1
+          summary: Published by APR
+          payload:
+            ? ''
+            : ./schemas/content.unpublished.v1.json
+  customer.lifecycle:
+    description: Topic for customer.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: customer.unclaimed-created.v1
+          title: customer.unclaimed-created.v1
+          summary: Published by CUS
+          payload:
+            ? ''
+            : ./schemas/customer.unclaimed-created.v1.json
+        - name: customer.claim-challenge-created.v1
+          title: customer.claim-challenge-created.v1
+          summary: Published by CUS
+          payload:
+            ? ''
+            : ./schemas/customer.claim-challenge-created.v1.json
+        - name: customer.claimed.v1
+          title: customer.claimed.v1
+          summary: Published by CUS
+          payload:
+            ? ''
+            : ./schemas/customer.claimed.v1.json
+        - name: customer.profile-updated.v1
+          title: customer.profile-updated.v1
+          summary: Published by CUS
+          payload:
+            ? ''
+            : ./schemas/customer.profile-updated.v1.json
+        - name: customer.address-created.v1
+          title: customer.address-created.v1
+          summary: Published by CUS
+          payload:
+            ? ''
+            : ./schemas/customer.address-created.v1.json
+        - name: customer.privacy-requested.v1
+          title: customer.privacy-requested.v1
+          summary: Published by CUS
+          payload:
+            ? ''
+            : ./schemas/customer.privacy-requested.v1.json
+  inventory.lifecycle:
+    description: Topic for inventory.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: inventory.reserved.v1
+          title: inventory.reserved.v1
+          summary: Published by INV
+          payload:
+            ? ''
+            : ./schemas/inventory.reserved.v1.json
+        - name: inventory.consumed.v1
+          title: inventory.consumed.v1
+          summary: Published by INV
+          payload:
+            ? ''
+            : ./schemas/inventory.consumed.v1.json
+        - name: inventory.released.v1
+          title: inventory.released.v1
+          summary: Published by INV
+          payload:
+            ? ''
+            : ./schemas/inventory.released.v1.json
+        - name: inventory.expired.v1
+          title: inventory.expired.v1
+          summary: Published by INV
+          payload:
+            ? ''
+            : ./schemas/inventory.expired.v1.json
+        - name: inventory.restored.v1
+          title: inventory.restored.v1
+          summary: Published by INV
+          payload:
+            ? ''
+            : ./schemas/inventory.restored.v1.json
+        - name: inventory.adjusted.v1
+          title: inventory.adjusted.v1
+          summary: Published by INV
+          payload:
+            ? ''
+            : ./schemas/inventory.adjusted.v1.json
+        - name: inventory.low-stock.v1
+          title: inventory.low-stock.v1
+          summary: Published by INV
+          payload:
+            ? ''
+            : ./schemas/inventory.low-stock.v1.json
+  order.lifecycle:
+    description: Topic for order.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: order.placed.v1
+          title: order.placed.v1
+          summary: Published by COM
+          payload:
+            ? ''
+            : ./schemas/order.placed.v1.json
+        - name: order.payment-pending.v1
+          title: order.payment-pending.v1
+          summary: Published by COM
+          payload:
+            ? ''
+            : ./schemas/order.payment-pending.v1.json
+        - name: order.paid.v1
+          title: order.paid.v1
+          summary: Published by COM
+          payload:
+            ? ''
+            : ./schemas/order.paid.v1.json
+        - name: order.processing.v1
+          title: order.processing.v1
+          summary: Published by COM
+          payload:
+            ? ''
+            : ./schemas/order.processing.v1.json
+        - name: order.shipped.v1
+          title: order.shipped.v1
+          summary: Published by COM
+          payload:
+            ? ''
+            : ./schemas/order.shipped.v1.json
+        - name: order.delivered.v1
+          title: order.delivered.v1
+          summary: Published by COM
+          payload:
+            ? ''
+            : ./schemas/order.delivered.v1.json
+        - name: order.cancelled.v1
+          title: order.cancelled.v1
+          summary: Published by COM
+          payload:
+            ? ''
+            : ./schemas/order.cancelled.v1.json
+        - name: order.returned.v1
+          title: order.returned.v1
+          summary: Published by COM
+          payload:
+            ? ''
+            : ./schemas/order.returned.v1.json
+        - name: order.refunded.v1
+          title: order.refunded.v1
+          summary: Published by COM
+          payload:
+            ? ''
+            : ./schemas/order.refunded.v1.json
+        - name: order.failed.v1
+          title: order.failed.v1
+          summary: Published by COM
+          payload:
+            ? ''
+            : ./schemas/order.failed.v1.json
+        - name: order.disputed.v1
+          title: order.disputed.v1
+          summary: Published by COM
+          payload:
+            ? ''
+            : ./schemas/order.disputed.v1.json
+  refund.lifecycle:
+    description: Topic for refund.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: refund.requested.v1
+          title: refund.requested.v1
+          summary: Published by COM/PAY
+          payload:
+            ? ''
+            : ./schemas/refund.requested.v1.json
+        - name: refund.approved.v1
+          title: refund.approved.v1
+          summary: Published by COM/PAY
+          payload:
+            ? ''
+            : ./schemas/refund.approved.v1.json
+        - name: refund.rejected.v1
+          title: refund.rejected.v1
+          summary: Published by COM/PAY
+          payload:
+            ? ''
+            : ./schemas/refund.rejected.v1.json
+        - name: refund.processing.v1
+          title: refund.processing.v1
+          summary: Published by COM/PAY
+          payload:
+            ? ''
+            : ./schemas/refund.processing.v1.json
+        - name: refund.completed.v1
+          title: refund.completed.v1
+          summary: Published by COM/PAY
+          payload:
+            ? ''
+            : ./schemas/refund.completed.v1.json
+  booking.lifecycle:
+    description: Topic for booking.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: booking.requested.v1
+          title: booking.requested.v1
+          summary: Published by BKG
+          payload:
+            ? ''
+            : ./schemas/booking.requested.v1.json
+        - name: booking.approved.v1
+          title: booking.approved.v1
+          summary: Published by BKG
+          payload:
+            ? ''
+            : ./schemas/booking.approved.v1.json
+        - name: booking.payment-required.v1
+          title: booking.payment-required.v1
+          summary: Published by BKG
+          payload:
+            ? ''
+            : ./schemas/booking.payment-required.v1.json
+        - name: booking.confirmed.v1
+          title: booking.confirmed.v1
+          summary: Published by BKG
+          payload:
+            ? ''
+            : ./schemas/booking.confirmed.v1.json
+        - name: booking.rescheduled.v1
+          title: booking.rescheduled.v1
+          summary: Published by BKG
+          payload:
+            ? ''
+            : ./schemas/booking.rescheduled.v1.json
+        - name: booking.completed.v1
+          title: booking.completed.v1
+          summary: Published by BKG
+          payload:
+            ? ''
+            : ./schemas/booking.completed.v1.json
+        - name: booking.cancelled.v1
+          title: booking.cancelled.v1
+          summary: Published by BKG
+          payload:
+            ? ''
+            : ./schemas/booking.cancelled.v1.json
+        - name: booking.rejected.v1
+          title: booking.rejected.v1
+          summary: Published by BKG
+          payload:
+            ? ''
+            : ./schemas/booking.rejected.v1.json
+        - name: booking.no-show.v1
+          title: booking.no-show.v1
+          summary: Published by BKG
+          payload:
+            ? ''
+            : ./schemas/booking.no-show.v1.json
+        - name: booking.refunded.v1
+          title: booking.refunded.v1
+          summary: Published by BKG
+          payload:
+            ? ''
+            : ./schemas/booking.refunded.v1.json
+  payment.lifecycle:
+    description: Topic for payment.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: payment.intent-created.v1
+          title: payment.intent-created.v1
+          summary: Published by PAY
+          payload:
+            ? ''
+            : ./schemas/payment.intent-created.v1.json
+        - name: payment.confirmed.v1
+          title: payment.confirmed.v1
+          summary: Published by PAY
+          payload:
+            ? ''
+            : ./schemas/payment.confirmed.v1.json
+        - name: payment.failed.v1
+          title: payment.failed.v1
+          summary: Published by PAY
+          payload:
+            ? ''
+            : ./schemas/payment.failed.v1.json
+        - name: payment.refund-initiated.v1
+          title: payment.refund-initiated.v1
+          summary: Published by PAY
+          payload:
+            ? ''
+            : ./schemas/payment.refund-initiated.v1.json
+        - name: payment.refund-confirmed.v1
+          title: payment.refund-confirmed.v1
+          summary: Published by PAY
+          payload:
+            ? ''
+            : ./schemas/payment.refund-confirmed.v1.json
+        - name: payment.provider-connected.v1
+          title: payment.provider-connected.v1
+          summary: Published by PAY
+          payload:
+            ? ''
+            : ./schemas/payment.provider-connected.v1.json
+        - name: payment.provider-disconnected.v1
+          title: payment.provider-disconnected.v1
+          summary: Published by PAY
+          payload:
+            ? ''
+            : ./schemas/payment.provider-disconnected.v1.json
+        - name: payment.reconciled.v1
+          title: payment.reconciled.v1
+          summary: Published by PAY
+          payload:
+            ? ''
+            : ./schemas/payment.reconciled.v1.json
+  shipment.lifecycle:
+    description: Topic for shipment.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: shipment.created.v1
+          title: shipment.created.v1
+          summary: Published by FUL
+          payload:
+            ? ''
+            : ./schemas/shipment.created.v1.json
+        - name: shipment.in-transit.v1
+          title: shipment.in-transit.v1
+          summary: Published by FUL
+          payload:
+            ? ''
+            : ./schemas/shipment.in-transit.v1.json
+        - name: shipment.delivered.v1
+          title: shipment.delivered.v1
+          summary: Published by FUL
+          payload:
+            ? ''
+            : ./schemas/shipment.delivered.v1.json
+        - name: shipment.returned.v1
+          title: shipment.returned.v1
+          summary: Published by FUL
+          payload:
+            ? ''
+            : ./schemas/shipment.returned.v1.json
+        - name: shipment.cancelled.v1
+          title: shipment.cancelled.v1
+          summary: Published by FUL
+          payload:
+            ? ''
+            : ./schemas/shipment.cancelled.v1.json
+        - name: cod.delivery-confirmed.v1
+          title: cod.delivery-confirmed.v1
+          summary: Published by FUL
+          payload:
+            ? ''
+            : ./schemas/cod.delivery-confirmed.v1.json
+  digital-fulfilment.lifecycle:
+    description: Topic for digital-fulfilment.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: digital.entitlement-issued.v1
+          title: digital.entitlement-issued.v1
+          summary: Published by FUL
+          payload:
+            ? ''
+            : ./schemas/digital.entitlement-issued.v1.json
+        - name: digital.link-issued.v1
+          title: digital.link-issued.v1
+          summary: Published by FUL
+          payload:
+            ? ''
+            : ./schemas/digital.link-issued.v1.json
+        - name: digital.downloaded.v1
+          title: digital.downloaded.v1
+          summary: Published by FUL
+          payload:
+            ? ''
+            : ./schemas/digital.downloaded.v1.json
+        - name: digital.link-expired.v1
+          title: digital.link-expired.v1
+          summary: Published by FUL
+          payload:
+            ? ''
+            : ./schemas/digital.link-expired.v1.json
+        - name: digital.entitlement-exhausted.v1
+          title: digital.entitlement-exhausted.v1
+          summary: Published by FUL
+          payload:
+            ? ''
+            : ./schemas/digital.entitlement-exhausted.v1.json
+  commission.lifecycle:
+    description: Topic for commission.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: commission.pending-trigger.v1
+          title: commission.pending-trigger.v1
+          summary: Published by FIN
+          payload:
+            ? ''
+            : ./schemas/commission.pending-trigger.v1.json
+        - name: commission.receivable.v1
+          title: commission.receivable.v1
+          summary: Published by FIN
+          payload:
+            ? ''
+            : ./schemas/commission.receivable.v1.json
+        - name: commission.invoiced.v1
+          title: commission.invoiced.v1
+          summary: Published by FIN
+          payload:
+            ? ''
+            : ./schemas/commission.invoiced.v1.json
+        - name: commission.invoice-paid.v1
+          title: commission.invoice-paid.v1
+          summary: Published by FIN
+          payload:
+            ? ''
+            : ./schemas/commission.invoice-paid.v1.json
+        - name: commission.invoice-overdue.v1
+          title: commission.invoice-overdue.v1
+          summary: Published by FIN
+          payload:
+            ? ''
+            : ./schemas/commission.invoice-overdue.v1.json
+        - name: commission.dispute-opened.v1
+          title: commission.dispute-opened.v1
+          summary: Published by FIN
+          payload:
+            ? ''
+            : ./schemas/commission.dispute-opened.v1.json
+        - name: commission.credit-created.v1
+          title: commission.credit-created.v1
+          summary: Published by FIN
+          payload:
+            ? ''
+            : ./schemas/commission.credit-created.v1.json
+        - name: commission.credit-applied.v1
+          title: commission.credit-applied.v1
+          summary: Published by FIN
+          payload:
+            ? ''
+            : ./schemas/commission.credit-applied.v1.json
+        - name: commission.cancelled-nonpayable.v1
+          title: commission.cancelled-nonpayable.v1
+          summary: Published by FIN
+          payload:
+            ? ''
+            : ./schemas/commission.cancelled-nonpayable.v1.json
+  platform-finance.lifecycle:
+    description: Topic for platform-finance.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: finance.platform-invoice-issued.v1
+          title: finance.platform-invoice-issued.v1
+          summary: Published by FIN
+          payload:
+            ? ''
+            : ./schemas/finance.platform-invoice-issued.v1.json
+        - name: finance.platform-payment-recorded.v1
+          title: finance.platform-payment-recorded.v1
+          summary: Published by FIN
+          payload:
+            ? ''
+            : ./schemas/finance.platform-payment-recorded.v1.json
+        - name: finance.due-cleared.v1
+          title: finance.due-cleared.v1
+          summary: Published by FIN
+          payload:
+            ? ''
+            : ./schemas/finance.due-cleared.v1.json
+        - name: finance.credit-note-issued.v1
+          title: finance.credit-note-issued.v1
+          summary: Published by FIN
+          payload:
+            ? ''
+            : ./schemas/finance.credit-note-issued.v1.json
+  compliance.lifecycle:
+    description: Topic for compliance.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: compliance.document-submitted.v1
+          title: compliance.document-submitted.v1
+          summary: Published by CMP
+          payload:
+            ? ''
+            : ./schemas/compliance.document-submitted.v1.json
+        - name: compliance.document-approved.v1
+          title: compliance.document-approved.v1
+          summary: Published by CMP
+          payload:
+            ? ''
+            : ./schemas/compliance.document-approved.v1.json
+        - name: gst.requested.v1
+          title: gst.requested.v1
+          summary: Published by CMP
+          payload:
+            ? ''
+            : ./schemas/gst.requested.v1.json
+        - name: gst.draft-ready.v1
+          title: gst.draft-ready.v1
+          summary: Published by CMP
+          payload:
+            ? ''
+            : ./schemas/gst.draft-ready.v1.json
+        - name: gst.tenant-approved.v1
+          title: gst.tenant-approved.v1
+          summary: Published by CMP
+          payload:
+            ? ''
+            : ./schemas/gst.tenant-approved.v1.json
+        - name: gst.filed.v1
+          title: gst.filed.v1
+          summary: Published by CMP
+          payload:
+            ? ''
+            : ./schemas/gst.filed.v1.json
+        - name: gst.acknowledged.v1
+          title: gst.acknowledged.v1
+          summary: Published by CMP
+          payload:
+            ? ''
+            : ./schemas/gst.acknowledged.v1.json
+        - name: compliance.complaint-opened.v1
+          title: compliance.complaint-opened.v1
+          summary: Published by CMP
+          payload:
+            ? ''
+            : ./schemas/compliance.complaint-opened.v1.json
+  risk.lifecycle:
+    description: Topic for risk.lifecycle event stream
+    publish:
+      message:
+        oneOf:
+        - name: risk.signal-created.v1
+          title: risk.signal-created.v1
+          summary: Published by CMP
+          payload:
+            ? ''
+            : ./schemas/risk.signal-created.v1.json
+        - name: risk.restriction-applied.v1
+          title: risk.restriction-applied.v1
+          summary: Published by CMP
+          payload:
+            ? ''
+            : ./schemas/risk.restriction-applied.v1.json
+        - name: risk.restriction-lifted.v1
+          title: risk.restriction-lifted.v1
+          summary: Published by CMP
+          payload:
+            ? ''
+            : ./schemas/risk.restriction-lifted.v1.json
+        - name: risk.tenant-terminated.v1
+          title: risk.tenant-terminated.v1
+          summary: Published by CMP
+          payload:
+            ? ''
+            : ./schemas/risk.tenant-terminated.v1.json
+  notification.delivery:
+    description: Topic for notification.delivery event stream
+    publish:
+      message:
+        oneOf:
+        - name: notification.queued.v1
+          title: notification.queued.v1
+          summary: Published by NTF
+          payload:
+            ? ''
+            : ./schemas/notification.queued.v1.json
+        - name: notification.sent.v1
+          title: notification.sent.v1
+          summary: Published by NTF
+          payload:
+            ? ''
+            : ./schemas/notification.sent.v1.json
+        - name: notification.failed.v1
+          title: notification.failed.v1
+          summary: Published by NTF
+          payload:
+            ? ''
+            : ./schemas/notification.failed.v1.json
+        - name: notification.delivery-updated.v1
+          title: notification.delivery-updated.v1
+          summary: Published by NTF
+          payload:
+            ? ''
+            : ./schemas/notification.delivery-updated.v1.json
+  analytics.ingest:
+    description: Topic for analytics.ingest event stream
+    publish:
+      message:
+        oneOf:
+        - name: analytics.page-view.v1
+          title: analytics.page-view.v1
+          summary: Published by ANL/edge
+          payload:
+            ? ''
+            : ./schemas/analytics.page-view.v1.json
+        - name: analytics.item-view.v1
+          title: analytics.item-view.v1
+          summary: Published by ANL/edge
+          payload:
+            ? ''
+            : ./schemas/analytics.item-view.v1.json
+        - name: analytics.form-submitted.v1
+          title: analytics.form-submitted.v1
+          summary: Published by ANL/edge
+          payload:
+            ? ''
+            : ./schemas/analytics.form-submitted.v1.json

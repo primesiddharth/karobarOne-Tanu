@@ -1,0 +1,632 @@
+openapi: 3.1.0
+info:
+  title: KarobarOne DOMAIN Service
+  version: 0.1.0
+paths:
+  /health/live:
+    get:
+      summary: Health Live
+      description: "Liveness probe returning 200 OK (RULES.md \xA71 C2)."
+      operationId: health_live_health_live_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /health/ready:
+    get:
+      summary: Health Ready
+      description: "Readiness probe verifying DB connectivity (RULES.md \xA71 C2)."
+      operationId: health_ready_health_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /internal/events:
+    post:
+      summary: Receive Internal Event
+      description: Ingress endpoint for cross-service events per SECURITY_LAYER.md.
+      operationId: receive_internal_event_internal_events_post
+      parameters:
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/status:
+    get:
+      summary: Get Service Status
+      operationId: get_service_status_api_v1_status_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/stores/{store_id}/subdomain:
+    post:
+      summary: Assign Subdomain
+      operationId: assign_subdomain_api_v1_stores__store_id__subdomain_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignSubdomainRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignSubdomainResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stores/{store_id}/domain-status:
+    get:
+      summary: Get Domain Status
+      operationId: get_domain_status_api_v1_stores__store_id__domain_status_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainStatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stores/{store_id}/publish:
+    post:
+      summary: Publish Store
+      operationId: publish_store_api_v1_stores__store_id__publish_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/PublishStoreRequest'
+              - type: 'null'
+              title: Body
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishStoreResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/internal/routes/resolve:
+    get:
+      summary: Resolve Route
+      operationId: resolve_route_api_v1_internal_routes_resolve_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: hostname
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 3
+          title: Hostname
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResolveRouteResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /status:
+    get:
+      summary: Get Service Status
+      operationId: get_service_status_status_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /stores/{store_id}/subdomain:
+    post:
+      summary: Assign Subdomain
+      operationId: assign_subdomain_stores__store_id__subdomain_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignSubdomainRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignSubdomainResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /stores/{store_id}/domain-status:
+    get:
+      summary: Get Domain Status
+      operationId: get_domain_status_stores__store_id__domain_status_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainStatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /stores/{store_id}/publish:
+    post:
+      summary: Publish Store
+      operationId: publish_store_stores__store_id__publish_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/PublishStoreRequest'
+              - type: 'null'
+              title: Body
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishStoreResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /internal/routes/resolve:
+    get:
+      summary: Resolve Route
+      operationId: resolve_route_internal_routes_resolve_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: hostname
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 3
+          title: Hostname
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResolveRouteResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    AssignSubdomainRequest:
+      properties:
+        slug:
+          type: string
+          maxLength: 63
+          minLength: 3
+          title: Slug
+      additionalProperties: false
+      type: object
+      required:
+      - slug
+      title: AssignSubdomainRequest
+    AssignSubdomainResponse:
+      properties:
+        subdomain_id:
+          type: string
+          format: uuid
+          title: Subdomain Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        label:
+          type: string
+          title: Label
+        fqdn:
+          type: string
+          title: Fqdn
+        status:
+          type: string
+          title: Status
+          default: ASSIGNED
+      additionalProperties: false
+      type: object
+      required:
+      - subdomain_id
+      - store_id
+      - label
+      - fqdn
+      title: AssignSubdomainResponse
+    CustomDomainDetail:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        domain_name:
+          type: string
+          title: Domain Name
+        status:
+          type: string
+          title: Status
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - domain_name
+      - status
+      title: CustomDomainDetail
+    DomainStatusResponse:
+      properties:
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        free_subdomain:
+          anyOf:
+          - $ref: '#/components/schemas/SubdomainDetail'
+          - type: 'null'
+        custom_domain:
+          anyOf:
+          - $ref: '#/components/schemas/CustomDomainDetail'
+          - type: 'null'
+        publication_status:
+          type: string
+          title: Publication Status
+        active_host:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Active Host
+      additionalProperties: false
+      type: object
+      required:
+      - store_id
+      - publication_status
+      title: DomainStatusResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    PublishStoreRequest:
+      properties:
+        expected_version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Expected Version
+      additionalProperties: false
+      type: object
+      title: PublishStoreRequest
+    PublishStoreResponse:
+      properties:
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        publication_state:
+          type: string
+          title: Publication State
+          default: PUBLIC_LIVE
+        active_host:
+          type: string
+          title: Active Host
+        published_at:
+          type: string
+          format: date-time
+          title: Published At
+      additionalProperties: false
+      type: object
+      required:
+      - store_id
+      - active_host
+      - published_at
+      title: PublishStoreResponse
+    ResolveRouteResponse:
+      properties:
+        hostname:
+          type: string
+          title: Hostname
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        route_type:
+          type: string
+          title: Route Type
+        status:
+          type: string
+          title: Status
+      additionalProperties: false
+      type: object
+      required:
+      - hostname
+      - store_id
+      - tenant_id
+      - route_type
+      - status
+      title: ResolveRouteResponse
+    SubdomainDetail:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        label:
+          type: string
+          title: Label
+        fqdn:
+          type: string
+          title: Fqdn
+        status:
+          type: string
+          title: Status
+        activated_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Activated At
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - label
+      - fqdn
+      - status
+      title: SubdomainDetail
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer

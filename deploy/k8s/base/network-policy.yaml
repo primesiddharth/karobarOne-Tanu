@@ -1,0 +1,94 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: karobar-platform
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
+  namespace: karobar-platform
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-ingress
+  namespace: karobar-platform
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: gateway
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow traffic from ingress controller
+    - ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    # Allow traffic to all internal microservices
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: karobarone
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-service-mesh
+  namespace: karobar-platform
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: karobarone
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow calls from gateway and peer services
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: karobarone
+      ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    # Allow intra-service communication
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: karobarone
+      ports:
+        - protocol: TCP
+          port: 8000
+    # Allow egress to external Neon DB / Postgres (Port 5432)
+    - ports:
+        - protocol: TCP
+          port: 5432
+    # Allow egress to external HTTPS (Port 443) for email/external APIs
+    - ports:
+        - protocol: TCP
+          port: 443

@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: karobar-platform
+
+resources:
+  - ../../base
+
+images:
+  - name: karobarone/gateway
+    newTag: staging
+  - name: karobarone/iam
+    newTag: staging
+  - name: karobarone/tenant
+    newTag: staging
+  - name: karobarone/approval
+    newTag: staging
+  - name: karobarone/catalog
+    newTag: staging
+  - name: karobarone/domain
+    newTag: staging
+  - name: karobarone/customer
+    newTag: staging
+  - name: karobarone/subscription
+    newTag: staging
+  - name: karobarone/inventory
+    newTag: staging
+
+patches:
+  - patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: staging-api.karobarone.com
+    target:
+      kind: Ingress
+      name: gateway-ingress

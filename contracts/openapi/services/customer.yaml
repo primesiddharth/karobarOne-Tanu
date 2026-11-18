@@ -1,0 +1,781 @@
+openapi: 3.1.0
+info:
+  title: KarobarOne CUSTOMER Service
+  version: 0.1.0
+paths:
+  /health/live:
+    get:
+      summary: Health Live
+      description: "Liveness probe returning 200 OK (RULES.md \xA71 C2)."
+      operationId: health_live_health_live_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /health/ready:
+    get:
+      summary: Health Ready
+      description: "Readiness probe verifying DB connectivity (RULES.md \xA71 C2)."
+      operationId: health_ready_health_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /metrics:
+    get:
+      summary: Get Metrics
+      description: "Internal Prometheus metrics endpoint (RULES.md \xA712)."
+      operationId: get_metrics_metrics_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            text/plain:
+              schema:
+                type: string
+  /internal/events:
+    post:
+      summary: Receive Internal Event
+      description: Ingress endpoint for cross-service events per SECURITY_LAYER.md.
+      operationId: receive_internal_event_internal_events_post
+      parameters:
+      - name: X-Service-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Service-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stores/{store_id}/customers/guest:
+    post:
+      summary: Create/resolve UNCLAIMED customer
+      operationId: CUS_001
+      parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Store Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Correlation-Id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Correlation-Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuestCustomerRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/customers/{id}/claim/challenge:
+    post:
+      summary: Start Email OTP claim
+      operationId: CUS_002
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Correlation-Id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Correlation-Id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimChallengeRequest'
+              default:
+                channel: EMAIL
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimChallengeResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/customers/{id}/claim/verify:
+    post:
+      summary: Verify OTP and claim
+      operationId: CUS_003
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Correlation-Id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Correlation-Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimVerifyRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimVerifyResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/customers/{id}:
+    get:
+      summary: Read customer
+      operationId: CUS_004
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      summary: Update profile fields
+      operationId: CUS_005
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Correlation-Id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Correlation-Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/customers/{id}/addresses:
+    post:
+      summary: Create address
+      operationId: CUS_006
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Correlation-Id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Correlation-Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAddressRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/customers/{id}/privacy-requests:
+    post:
+      summary: Open privacy request
+      operationId: CUS_007
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-Correlation-Id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Correlation-Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrivacyRequestInput'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacyRequestResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    AddressResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        customer_id:
+          type: string
+          format: uuid
+          title: Customer Id
+        address_type:
+          type: string
+          title: Address Type
+        recipient_name:
+          type: string
+          title: Recipient Name
+        line1:
+          type: string
+          title: Line1
+        line2:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Line2
+        city:
+          type: string
+          title: City
+        state_code:
+          type: string
+          title: State Code
+        postal_code:
+          type: string
+          title: Postal Code
+        country_code:
+          type: string
+          title: Country Code
+        is_default:
+          type: boolean
+          title: Is Default
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - customer_id
+      - address_type
+      - recipient_name
+      - line1
+      - city
+      - state_code
+      - postal_code
+      - country_code
+      - is_default
+      - created_at
+      title: AddressResponse
+    ClaimChallengeRequest:
+      properties:
+        channel:
+          type: string
+          pattern: ^(EMAIL|SMS)$
+          title: Channel
+          default: EMAIL
+      additionalProperties: false
+      type: object
+      title: ClaimChallengeRequest
+    ClaimChallengeResponse:
+      properties:
+        challenge_id:
+          type: string
+          format: uuid
+          title: Challenge Id
+        customer_id:
+          type: string
+          format: uuid
+          title: Customer Id
+        channel:
+          type: string
+          title: Channel
+        status:
+          type: string
+          title: Status
+      additionalProperties: false
+      type: object
+      required:
+      - challenge_id
+      - customer_id
+      - channel
+      - status
+      title: ClaimChallengeResponse
+    ClaimVerifyRequest:
+      properties:
+        challenge_id:
+          type: string
+          format: uuid
+          title: Challenge Id
+        otp_code:
+          type: string
+          maxLength: 10
+          minLength: 4
+          title: Otp Code
+        password:
+          anyOf:
+          - type: string
+            maxLength: 128
+            minLength: 8
+          - type: 'null'
+          title: Password
+      additionalProperties: false
+      type: object
+      required:
+      - challenge_id
+      - otp_code
+      title: ClaimVerifyRequest
+    ClaimVerifyResponse:
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+          title: Customer Id
+        status:
+          type: string
+          title: Status
+        iam_principal_id:
+          type: string
+          format: uuid
+          title: Iam Principal Id
+        claimed_at:
+          type: string
+          format: date-time
+          title: Claimed At
+      additionalProperties: false
+      type: object
+      required:
+      - customer_id
+      - status
+      - iam_principal_id
+      - claimed_at
+      title: ClaimVerifyResponse
+    CreateAddressRequest:
+      properties:
+        address_type:
+          type: string
+          pattern: ^(SHIPPING|BILLING|BOTH)$
+          title: Address Type
+        recipient_name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Recipient Name
+        line1:
+          type: string
+          maxLength: 240
+          minLength: 1
+          title: Line1
+        line2:
+          anyOf:
+          - type: string
+            maxLength: 240
+          - type: 'null'
+          title: Line2
+        city:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: City
+        state_code:
+          type: string
+          maxLength: 16
+          minLength: 2
+          title: State Code
+        postal_code:
+          type: string
+          maxLength: 12
+          minLength: 4
+          title: Postal Code
+        country_code:
+          type: string
+          maxLength: 2
+          title: Country Code
+          default: IN
+        is_default:
+          type: boolean
+          title: Is Default
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - address_type
+      - recipient_name
+      - line1
+      - city
+      - state_code
+      - postal_code
+      title: CreateAddressRequest
+    CustomerResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        email:
+          type: string
+          title: Email
+        mobile_e164:
+          type: string
+          title: Mobile E164
+        status:
+          type: string
+          title: Status
+        iam_principal_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Iam Principal Id
+        first_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: First Name
+        last_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Last Name
+        claimed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Claimed At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - tenant_id
+      - store_id
+      - email
+      - mobile_e164
+      - status
+      - created_at
+      - updated_at
+      title: CustomerResponse
+    GuestCustomerRequest:
+      properties:
+        email:
+          type: string
+          maxLength: 255
+          minLength: 3
+          title: Email
+        mobile:
+          type: string
+          maxLength: 20
+          minLength: 10
+          title: Mobile
+        first_name:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          title: First Name
+        last_name:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          title: Last Name
+      additionalProperties: false
+      type: object
+      required:
+      - email
+      - mobile
+      title: GuestCustomerRequest
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    PrivacyRequestInput:
+      properties:
+        request_type:
+          type: string
+          pattern: ^(ACCESS|CORRECT|DELETE|WITHDRAW_CONSENT)$
+          title: Request Type
+      additionalProperties: false
+      type: object
+      required:
+      - request_type
+      title: PrivacyRequestInput
+    PrivacyRequestResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        customer_id:
+          type: string
+          format: uuid
+          title: Customer Id
+        request_type:
+          type: string
+          title: Request Type
+        status:
+          type: string
+          title: Status
+        requested_at:
+          type: string
+          format: date-time
+          title: Requested At
+        completed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Completed At
+        retention_basis:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Retention Basis
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - customer_id
+      - request_type
+      - status
+      - requested_at
+      title: PrivacyRequestResponse
+    UpdateProfileRequest:
+      properties:
+        first_name:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          title: First Name
+        last_name:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          title: Last Name
+      additionalProperties: false
+      type: object
+      title: UpdateProfileRequest
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
