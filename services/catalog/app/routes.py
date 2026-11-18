@@ -4,7 +4,7 @@ import hashlib
 import json
 from uuid import UUID, uuid4
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, Depends, Header, Request, Query, status
+from fastapi import APIRouter, Depends, Header, Query, status
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession

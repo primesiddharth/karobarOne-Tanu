@@ -3,11 +3,11 @@
 import json
 from uuid import UUID, uuid4
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, Depends, Header, Request, status
+from fastapi import APIRouter, Depends, Header, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, text
+from sqlalchemy import select
 from libs.platform_contracts.tokens import Principal, verify_token
 from libs.platform_contracts.errors import ApiError, ErrorCode
 from .config import settings

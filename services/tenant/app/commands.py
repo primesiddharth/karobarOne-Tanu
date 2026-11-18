@@ -2,8 +2,8 @@
 # Plain transaction functions implementing named business commands for Tenant & Store (RULES.md §4).
 # No abstraction layers, repositories, or unit-of-work classes.
 from uuid import UUID, uuid4
-from datetime import datetime, timezone, date, timedelta
-from sqlalchemy import select, text
+from datetime import datetime, timezone, date
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from libs.platform_contracts.tokens import Principal

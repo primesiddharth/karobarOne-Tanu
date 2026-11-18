@@ -4,7 +4,7 @@ import hashlib
 import json
 from uuid import UUID, uuid4
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, Depends, Header, Request, Query, status
+from fastapi import APIRouter, Depends, Header, Query, status
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +14,6 @@ from libs.platform_contracts.tokens import Principal, verify_token
 from libs.platform_contracts.errors import ApiError, ErrorCode
 from .config import settings
 from .db import get_db_session
-from . import domain
 from . import models
 from . import schemas
 from . import commands

@@ -4,19 +4,15 @@ tools/db/reconcile_data.py — Orchestrates dry-run migration and outputs reconc
 Usage:
     python tools/db/reconcile_data.py [--source <sqlite_path>] [--output <report_path>]
 """
-import os
-import sys
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
 try:
-    from .migrate_iam import migrate_iam_data
     from .migrate_catalog import migrate_catalog_data
     from .migrate_inventory import migrate_inventory_data
     from .migrate_approvals import migrate_approvals_data
 except ImportError:
-    from migrate_iam import migrate_iam_data
     from migrate_catalog import migrate_catalog_data
     from migrate_inventory import migrate_inventory_data
     from migrate_approvals import migrate_approvals_data

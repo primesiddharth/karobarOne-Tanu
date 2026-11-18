@@ -114,7 +114,7 @@ def main() -> int:
 
     print(f"[ALIVE] MinIO server is healthy. Ensuring bucket '{bucket}' exists...")
     try:
-        import boto3
+        import boto3  # noqa: F401
         success = setup_bucket_via_boto3(config)
     except ImportError:
         success = setup_bucket_via_httpx(config)

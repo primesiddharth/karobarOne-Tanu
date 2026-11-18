@@ -4,8 +4,7 @@
 import re
 import hmac
 import hashlib
-from datetime import date, datetime, timezone
-from uuid import UUID
+from datetime import date
 from cryptography.fernet import Fernet
 
 

@@ -7,7 +7,7 @@ import os
 import re
 from contextlib import asynccontextmanager
 from uuid import uuid4
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response as FastAPIResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 import httpx

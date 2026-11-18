@@ -14,7 +14,7 @@ from libs.platform_contracts.tokens import Principal, verify_token
 from libs.platform_contracts.errors import ApiError, ErrorCode
 from .config import settings
 from .db import get_db_session
-from . import models, schemas, commands, events
+from . import models, schemas, commands
 
 router = APIRouter()
 security = HTTPBearer(auto_error=False)

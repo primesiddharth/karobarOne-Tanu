@@ -10,7 +10,6 @@ Follows RULES.md §5.10 & §11:
 import os
 import sys
 import asyncio
-from datetime import datetime, timezone
 from uuid import uuid4
 import asyncpg
 

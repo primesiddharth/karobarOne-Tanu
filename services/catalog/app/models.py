@@ -1,5 +1,4 @@
 # app/models.py
-from datetime import datetime, timezone
 import uuid
 from sqlalchemy import (
     Column,

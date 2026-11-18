@@ -8,7 +8,6 @@ Usage:
 import os
 import sys
 import uuid
-from datetime import datetime, timezone
 from pathlib import Path
 from sqlalchemy import create_engine, text
 

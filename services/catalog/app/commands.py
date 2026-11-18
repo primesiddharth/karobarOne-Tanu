@@ -1,6 +1,5 @@
 # app/commands.py
 from datetime import datetime, timezone
-from decimal import Decimal
 from uuid import UUID, uuid4
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func

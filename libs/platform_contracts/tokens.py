@@ -2,7 +2,6 @@
 # File: libs/platform_contracts/tokens.py
 # Purpose: Asymmetric JWT verification and Principal claims extraction (RULES §8, Security §6)
 # ==============================================================================
-from typing import Any
 from uuid import UUID
 import jwt
 from pydantic import BaseModel, ConfigDict, Field

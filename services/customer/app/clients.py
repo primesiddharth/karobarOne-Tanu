@@ -1,6 +1,6 @@
 # app/clients.py
 # External & cross-service clients with stubs marked per RULES.md §13 & docs/STUBS.md
-from uuid import UUID, uuid4, uuid5, NAMESPACE_URL
+from uuid import UUID, uuid5, NAMESPACE_URL
 import httpx
 import structlog
 from libs.platform_contracts.errors import ApiError, ErrorCode

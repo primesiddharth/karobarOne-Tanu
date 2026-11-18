@@ -1,7 +1,7 @@
 # app/models.py
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB, INET
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import DateTime, UniqueConstraint, CheckConstraint, String, Integer, Boolean, ForeignKey, Index, text
 

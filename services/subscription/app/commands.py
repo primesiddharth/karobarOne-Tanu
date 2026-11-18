@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from uuid import UUID, uuid4
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, text
+from sqlalchemy import select
 import structlog
 
 from libs.platform_contracts.errors import ApiError, ErrorCode

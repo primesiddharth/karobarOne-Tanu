@@ -1,7 +1,6 @@
 # app/commands.py
 # Plain transaction functions implementing named business commands (RULES.md §4).
 # No abstraction layers, repositories, or unit-of-work classes.
-import json
 from uuid import UUID, uuid4
 from datetime import datetime, timezone, timedelta
 from sqlalchemy import text, select
