@@ -4,7 +4,9 @@
 # ==============================================================================
 import re
 from typing import Any
+
 import structlog
+from structlog.typing import EventDict 
 
 SENSITIVE_KEYS = {
     "pan",
@@ -42,11 +44,11 @@ def _redact_value(key: str, val: Any) -> Any:
     return val
 
 
-def redact_sensitive_values(_, __, event_dict: dict[str, Any]) -> dict[str, Any]:
-    """
-    Structlog processor that redacts PAN, GSTIN, OTP, passwords, tokens,
-    secrets, and authorization headers per RULES §10 and FND-TST-028.
-    """
+def redact_sensitive_values(
+    _: Any,
+    __: str,
+    event_dict: EventDict,
+) -> EventDict:
     return {k: _redact_value(k, v) for k, v in event_dict.items()}
 
 
@@ -57,7 +59,7 @@ def configure_logging(level: str = "INFO") -> None:
             structlog.contextvars.merge_contextvars,
             structlog.processors.add_log_level,
             structlog.processors.TimeStamper(fmt="iso"),
-            redact_sensitive_values,
+            redact_sensitive_values, 
             structlog.processors.JSONRenderer(),
         ],
         wrapper_class=structlog.make_filtering_bound_logger(level),

@@ -149,8 +149,10 @@ async def db_engine(postgres_url, monkeypatch):
         pass
 
     for mod_name, mod in list(sys.modules.items()):
-        if ("iam.tests" in mod_name or "tenant.tests" in mod_name) and hasattr(mod, "async_session_factory"):
+        if hasattr(mod, "async_session_factory"):
             monkeypatch.setattr(mod, "async_session_factory", session_factory)
+        if hasattr(mod, "engine") and "sqlalchemy" not in mod_name and "conftest" not in mod_name:
+            monkeypatch.setattr(mod, "engine", engine)
 
     yield engine
     await engine.dispose()

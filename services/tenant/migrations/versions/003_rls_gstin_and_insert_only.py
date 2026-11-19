@@ -19,16 +19,15 @@ TENANT_TABLES = [
     'guardians',
     'guardian_consents',
     'gstins',
-    'gstin_verifications',
     'free_store_entitlements',
 ]
 
-STORE_TABLES = [
-    'stores',
+STORE_CHILD_TABLES = [
     'store_memberships',
     'seller_identity_snapshots',
     'store_gstin_assignments',
 ]
+STORE_TABLES = ['stores'] + STORE_CHILD_TABLES
 
 INSERT_ONLY_TABLES = [
     'guardian_consents',
@@ -49,15 +48,17 @@ def upgrade() -> None:
         assigned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         released_at TIMESTAMPTZ NULL
     );
-    CREATE INDEX IF NOT EXISTS idx_tenant_gstin_assign_tenant ON tenant.store_gstin_assignments (tenant_id);
-    CREATE INDEX IF NOT EXISTS idx_tenant_gstin_assign_store ON tenant.store_gstin_assignments (store_id);
-    CREATE INDEX IF NOT EXISTS idx_tenant_gstin_assign_gstin ON tenant.store_gstin_assignments (gstin_id);
+    """)
+    op.execute("CREATE INDEX IF NOT EXISTS idx_tenant_gstin_assign_tenant ON tenant.store_gstin_assignments (tenant_id);")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_tenant_gstin_assign_store ON tenant.store_gstin_assignments (store_id);")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_tenant_gstin_assign_gstin ON tenant.store_gstin_assignments (gstin_id);")
 
-    -- Partial UNIQUE: same GSTIN cannot actively back two paid stores (AC-008..010)
-    CREATE UNIQUE INDEX IF NOT EXISTS uq_active_store_gstin ON tenant.store_gstin_assignments (gstin_id) WHERE released_at IS NULL;
-    -- Partial UNIQUE: one store can only hold one active GSTIN assignment
-    CREATE UNIQUE INDEX IF NOT EXISTS uq_active_store_assignment ON tenant.store_gstin_assignments (store_id) WHERE released_at IS NULL;
+    # Partial UNIQUE: same GSTIN cannot actively back two paid stores (AC-008..010)
+    op.execute("CREATE UNIQUE INDEX IF NOT EXISTS uq_active_store_gstin_assignment ON tenant.store_gstin_assignments (gstin_id) WHERE released_at IS NULL;")
+    # Partial UNIQUE: one store can only hold one active GSTIN assignment
+    op.execute("CREATE UNIQUE INDEX IF NOT EXISTS uq_active_store_assignment ON tenant.store_gstin_assignments (store_id) WHERE released_at IS NULL;")
 
+    op.execute("""
     DO $$
     BEGIN
         IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'tenant_svc') THEN
@@ -68,7 +69,7 @@ def upgrade() -> None:
     """)
 
     # 2. Enable & Force Row Level Security on all tenant and store tables
-    all_tables = ['tenants'] + TENANT_TABLES + STORE_TABLES
+    all_tables = ['tenants'] + TENANT_TABLES + STORE_TABLES + ['gstin_verifications']
     for t in all_tables:
         op.execute(f"ALTER TABLE tenant.{t} ENABLE ROW LEVEL SECURITY;")
         op.execute(f"ALTER TABLE tenant.{t} FORCE ROW LEVEL SECURITY;")
@@ -151,8 +152,102 @@ def upgrade() -> None:
         $$;
         """)
 
-    # 5. Create store isolation policy for store-owned tables (checks tenant_id and store_id if set)
-    for t in STORE_TABLES:
+    # 4b. Create isolation policy for gstin_verifications (scoped via gstin_id -> tenant.gstins)
+    op.execute("""
+    DO $$
+    BEGIN
+        DROP POLICY IF EXISTS tenant_isolation_policy ON tenant.gstin_verifications;
+        IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'tenant_svc') THEN
+            CREATE POLICY tenant_isolation_policy ON tenant.gstin_verifications
+                TO tenant_svc
+                USING (
+                    EXISTS (
+                        SELECT 1 FROM tenant.gstins g
+                        WHERE g.id = gstin_id
+                        AND (
+                            g.tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+                            OR current_setting('app.is_platform_admin', true) = 'true'
+                        )
+                    )
+                )
+                WITH CHECK (
+                    EXISTS (
+                        SELECT 1 FROM tenant.gstins g
+                        WHERE g.id = gstin_id
+                        AND (
+                            g.tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+                            OR current_setting('app.is_platform_admin', true) = 'true'
+                        )
+                    )
+                );
+        ELSE
+            CREATE POLICY tenant_isolation_policy ON tenant.gstin_verifications
+                USING (
+                    EXISTS (
+                        SELECT 1 FROM tenant.gstins g
+                        WHERE g.id = gstin_id
+                        AND (
+                            g.tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+                            OR current_setting('app.is_platform_admin', true) = 'true'
+                        )
+                    )
+                )
+                WITH CHECK (
+                    EXISTS (
+                        SELECT 1 FROM tenant.gstins g
+                        WHERE g.id = gstin_id
+                        AND (
+                            g.tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+                            OR current_setting('app.is_platform_admin', true) = 'true'
+                        )
+                    )
+                );
+        END IF;
+    END
+    $$;
+    """)
+
+    # 5a. Create store isolation policy for stores table (id is the store id)
+    op.execute("""
+    DO $$
+    BEGIN
+        DROP POLICY IF EXISTS tenant_isolation_policy ON tenant.stores;
+        IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'tenant_svc') THEN
+            CREATE POLICY tenant_isolation_policy ON tenant.stores
+                TO tenant_svc
+                USING (
+                    (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+                     AND (NULLIF(current_setting('app.store_id', true), '') IS NULL
+                          OR id = NULLIF(current_setting('app.store_id', true), '')::uuid))
+                    OR current_setting('app.is_platform_admin', true) = 'true'
+                )
+                WITH CHECK (
+                    (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+                     AND (NULLIF(current_setting('app.store_id', true), '') IS NULL
+                          OR id = NULLIF(current_setting('app.store_id', true), '')::uuid))
+                    OR current_setting('app.is_platform_admin', true) = 'true'
+                );
+        ELSE
+            CREATE POLICY tenant_isolation_policy ON tenant.stores
+                USING (
+                    (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+                     AND (NULLIF(current_setting('app.store_id', true), '') IS NULL
+                          OR id = NULLIF(current_setting('app.store_id', true), '')::uuid))
+                    OR current_setting('app.is_platform_admin', true) = 'true'
+                )
+                WITH CHECK (
+                    (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+                     AND (NULLIF(current_setting('app.store_id', true), '') IS NULL
+                          OR id = NULLIF(current_setting('app.store_id', true), '')::uuid))
+                    OR current_setting('app.is_platform_admin', true) = 'true'
+                );
+        END IF;
+    END
+    $$;
+    """)
+
+    # 5b. Create store isolation policy for store-owned child tables (store_id)
+    for t in STORE_CHILD_TABLES:
         op.execute(f"""
         DO $$
         BEGIN
@@ -206,7 +301,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # Drop policies and RLS
-    all_tables = ['tenants'] + TENANT_TABLES + STORE_TABLES
+    all_tables = ['tenants'] + TENANT_TABLES + STORE_TABLES + ['gstin_verifications']
     for t in all_tables:
         op.execute(f"DROP POLICY IF EXISTS tenant_isolation_policy ON tenant.{t};")
         op.execute(f"DROP POLICY IF EXISTS migrator_full_access ON tenant.{t};")

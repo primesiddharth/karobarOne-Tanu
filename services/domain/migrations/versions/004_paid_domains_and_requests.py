@@ -88,6 +88,21 @@ def upgrade() -> None:
     for t in ['domain_requests', 'dns_checks']:
         op.execute(f"ALTER TABLE domain.{t} ENABLE ROW LEVEL SECURITY;")
         op.execute(f"ALTER TABLE domain.{t} FORCE ROW LEVEL SECURITY;")
+
+        op.execute(f"""
+        DO $$
+        BEGIN
+            IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'domain_migrator') THEN
+                DROP POLICY IF EXISTS migrator_full_access ON domain.{t};
+                CREATE POLICY migrator_full_access ON domain.{t}
+                    TO domain_migrator
+                    USING (true)
+                    WITH CHECK (true);
+            END IF;
+        END
+        $$;
+        """)
+
         op.execute(f"""
             CREATE POLICY {t}_tenant_isolation ON domain.{t}
             FOR ALL
@@ -104,6 +119,12 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    for t in ['domain_requests', 'dns_checks']:
+        op.execute(f"DROP POLICY IF EXISTS migrator_full_access ON domain.{t};")
+        op.execute(f"DROP POLICY IF EXISTS {t}_tenant_isolation ON domain.{t};")
+        op.execute(f"ALTER TABLE domain.{t} NO FORCE ROW LEVEL SECURITY;")
+        op.execute(f"ALTER TABLE domain.{t} DISABLE ROW LEVEL SECURITY;")
+
     op.drop_table('dns_checks', schema='domain')
     op.drop_table('domain_requests', schema='domain')
     op.drop_column('domains', 'updated_at', schema='domain')

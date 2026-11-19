@@ -2,6 +2,7 @@
 # Acceptance Criteria test suite for Phase 9: Domain & Publication (Paid Part)
 # Covers: AC-059, AC-085, AC-086, AC-087, AC-088, publish gates, timeout recovery, and event contracts.
 import pytest
+import json
 from uuid import UUID, uuid4
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock
@@ -49,7 +50,13 @@ def get_outbox_events(mock_session):
     events = []
     for stmt, params in mock_session.executed_calls:
         if params and "event_type" in params:
-            events.append(params)
+            p = dict(params)
+            if "payload" in p and isinstance(p["payload"], str):
+                try:
+                    p["payload"] = json.loads(p["payload"])
+                except Exception:
+                    pass
+            events.append(p)
     return events
 
 

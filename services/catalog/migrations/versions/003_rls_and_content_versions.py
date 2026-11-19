@@ -43,31 +43,39 @@ def upgrade() -> None:
         CONSTRAINT uq_store_content_section_version UNIQUE(store_id, content_section, version_no),
         CONSTRAINT ck_store_content_approval_state CHECK (approval_state IN ('DRAFT', 'PENDING', 'APPROVED_LIVE', 'REJECTED', 'EMERGENCY_TAKEDOWN'))
     );
-    CREATE INDEX IF NOT EXISTS idx_cat_content_tenant ON catalog.store_content_versions (tenant_id);
-    CREATE INDEX IF NOT EXISTS idx_cat_content_store ON catalog.store_content_versions (store_id);
-    CREATE INDEX IF NOT EXISTS idx_cat_content_section ON catalog.store_content_versions (content_section);
-    CREATE INDEX IF NOT EXISTS idx_cat_content_state ON catalog.store_content_versions (approval_state);
-    CREATE INDEX IF NOT EXISTS idx_cat_content_hash ON catalog.store_content_versions (content_hash);
+    """)
+    op.execute("CREATE INDEX IF NOT EXISTS idx_cat_content_tenant ON catalog.store_content_versions (tenant_id);")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_cat_content_store ON catalog.store_content_versions (store_id);")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_cat_content_section ON catalog.store_content_versions (content_section);")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_cat_content_state ON catalog.store_content_versions (approval_state);")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_cat_content_hash ON catalog.store_content_versions (content_hash);")
 
-    -- 2. Add tenant_id and store_id to supporting tables for direct RLS enforcement
+    # 2. Add tenant_id and store_id to supporting tables for direct RLS enforcement
+    op.execute("""
     ALTER TABLE catalog.product_details
         ADD COLUMN IF NOT EXISTS tenant_id UUID,
         ADD COLUMN IF NOT EXISTS store_id UUID;
-    CREATE INDEX IF NOT EXISTS idx_product_details_tenant ON catalog.product_details (tenant_id);
-    CREATE INDEX IF NOT EXISTS idx_product_details_store ON catalog.product_details (store_id);
+    """)
+    op.execute("CREATE INDEX IF NOT EXISTS idx_product_details_tenant ON catalog.product_details (tenant_id);")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_product_details_store ON catalog.product_details (store_id);")
 
+    op.execute("""
     ALTER TABLE catalog.service_details
         ADD COLUMN IF NOT EXISTS tenant_id UUID,
         ADD COLUMN IF NOT EXISTS store_id UUID;
-    CREATE INDEX IF NOT EXISTS idx_service_details_tenant ON catalog.service_details (tenant_id);
-    CREATE INDEX IF NOT EXISTS idx_service_details_store ON catalog.service_details (store_id);
+    """)
+    op.execute("CREATE INDEX IF NOT EXISTS idx_service_details_tenant ON catalog.service_details (tenant_id);")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_service_details_store ON catalog.service_details (store_id);")
 
+    op.execute("""
     ALTER TABLE catalog.item_media
         ADD COLUMN IF NOT EXISTS tenant_id UUID,
         ADD COLUMN IF NOT EXISTS store_id UUID;
-    CREATE INDEX IF NOT EXISTS idx_item_media_tenant ON catalog.item_media (tenant_id);
-    CREATE INDEX IF NOT EXISTS idx_item_media_store ON catalog.item_media (store_id);
+    """)
+    op.execute("CREATE INDEX IF NOT EXISTS idx_item_media_tenant ON catalog.item_media (tenant_id);")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_item_media_store ON catalog.item_media (store_id);")
 
+    op.execute("""
     DO $$
     BEGIN
         IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'catalog_svc') THEN

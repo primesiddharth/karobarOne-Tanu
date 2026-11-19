@@ -27,10 +27,16 @@ def upgrade():
         CONSTRAINT chk_principal_type CHECK (principal_type IN ('USER', 'SERVICE')),
         CONSTRAINT chk_principal_status CHECK (status IN ('ACTIVE', 'LOCKED', 'DISABLED', 'PENDING_VERIFICATION'))
     );
+    """)
+    op.execute("""
     CREATE UNIQUE INDEX IF NOT EXISTS idx_iam_principals_lower_email
         ON iam.principals (lower(email)) WHERE email IS NOT NULL;
+    """)
+    op.execute("""
     CREATE UNIQUE INDEX IF NOT EXISTS idx_iam_principals_mobile
         ON iam.principals (mobile_e164) WHERE mobile_e164 IS NOT NULL;
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_principals_status
         ON iam.principals (status);
     """)
@@ -62,8 +68,12 @@ def upgrade():
         ip_address VARCHAR(45) NULL,
         user_agent VARCHAR(512) NULL
     );
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_sessions_principal
         ON iam.sessions (principal_id);
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_sessions_revoked
         ON iam.sessions (revoked_at);
     """)
@@ -79,8 +89,12 @@ def upgrade():
         expires_at TIMESTAMPTZ NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_refresh_tokens_session
         ON iam.refresh_tokens (session_id);
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_refresh_tokens_used
         ON iam.refresh_tokens (used_at);
     """)
@@ -106,14 +120,24 @@ def upgrade():
             OR (role_code = 'SERVICE' AND tenant_id IS NULL AND store_id IS NULL)
         )
     );
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_role_assignments_principal
         ON iam.role_assignments (principal_id);
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_role_assignments_role_code
         ON iam.role_assignments (role_code);
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_role_assignments_tenant
         ON iam.role_assignments (tenant_id) WHERE tenant_id IS NOT NULL;
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_role_assignments_store
         ON iam.role_assignments (store_id) WHERE store_id IS NOT NULL;
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_role_assignments_active
         ON iam.role_assignments (revoked_at) WHERE revoked_at IS NULL;
     """)
@@ -134,10 +158,16 @@ def upgrade():
         CONSTRAINT chk_otp_channel CHECK (channel IN ('EMAIL', 'SMS')),
         CONSTRAINT chk_otp_purpose CHECK (purpose IN ('ACCOUNT_CLAIM', 'STEP_UP_AUTH', 'VERIFICATION'))
     );
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_otp_fingerprint
         ON iam.otp_challenges (destination_fingerprint);
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_otp_expires
         ON iam.otp_challenges (expires_at);
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_otp_consumed
         ON iam.otp_challenges (consumed_at);
     """)
@@ -155,10 +185,16 @@ def upgrade():
         occurred_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         details JSONB NOT NULL DEFAULT '{}'
     );
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_sec_events_principal
         ON iam.security_events (principal_id);
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_sec_events_type
         ON iam.security_events (event_type);
+    """)
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_sec_events_occurred
         ON iam.security_events (occurred_at);
     """)

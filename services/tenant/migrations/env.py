@@ -1,53 +1,54 @@
-from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
-from alembic import context
+# migrations/env.py
+import asyncio
 import os
+import sys
+import re
+from pathlib import Path
+from logging.config import fileConfig
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import create_async_engine
+from alembic import context
+
+service_dir = str(Path(__file__).resolve().parent.parent)
+if service_dir not in sys.path:
+    sys.path.insert(0, service_dir)
+
+from app.config import settings
 
 config = context.config
-
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-from app.models import Base
-target_metadata = Base.metadata
 
-def run_migrations_offline() -> None:
-    url = os.getenv("MIGRATION_DATABASE_URL", config.get_main_option("sqlalchemy.url"))
+def do_run_migrations(connection):
+    connection.execute(text("CREATE SCHEMA IF NOT EXISTS tenant;"))
     context.configure(
-        url=url,
-        target_metadata=target_metadata,
-        literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
+        connection=connection,
+        target_metadata=None,
+        version_table="tenant_alembic_version",
         version_table_schema="tenant",
-        include_schemas=True,
     )
-
     with context.begin_transaction():
         context.run_migrations()
 
-def run_migrations_online() -> None:
-    url = os.getenv("MIGRATION_DATABASE_URL")
-    if url:
-        config.set_main_option("sqlalchemy.url", url.replace("+asyncpg", ""))
 
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+async def run_async_migrations():
+    url = settings.MIGRATION_DATABASE_URL.replace("sslmode=", "ssl=")
+    url = re.sub(r'[?&]statement_cache_size=[^&]*', '', url)
+    engine = create_async_engine(url, connect_args={"statement_cache_size": 0})
+    async with engine.connect() as connection:
+        await connection.run_sync(do_run_migrations)
+        await connection.commit()
+    await engine.dispose()
 
-    with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            version_table_schema="tenant",
-            include_schemas=True,
-        )
 
-        with context.begin_transaction():
-            context.run_migrations()
+def run_migrations_online():
+    asyncio.run(run_async_migrations())
+
 
 if context.is_offline_mode():
-    run_migrations_offline()
+    context.configure(url=settings.MIGRATION_DATABASE_URL)
+    with context.begin_transaction():
+        context.run_migrations()
 else:
     run_migrations_online()

@@ -2,7 +2,7 @@
 """Initial baseline schema for iam"""
 from alembic import op
 
-revision = '001'
+revision = "001"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -33,6 +33,9 @@ def upgrade():
         next_attempt_at TIMESTAMPTZ,
         dead BOOLEAN NOT NULL DEFAULT FALSE
     );
+    """)
+
+    op.execute("""
     CREATE INDEX IF NOT EXISTS idx_iam_outbox_pending
         ON iam.outbox_events (created_at)
         WHERE published_at IS NULL AND dead = FALSE;

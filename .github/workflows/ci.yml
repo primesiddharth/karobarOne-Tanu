@@ -85,6 +85,7 @@ jobs:
             "uvicorn[standard]==0.51.0" \
             "sqlalchemy==2.0.51" \
             "asyncpg==0.31.0" \
+            "psycopg2-binary>=2.9.9" \
             "pydantic[email]==2.13.4" \
             "pydantic-settings==2.14.2" \
             "email-validator>=2.0.0" \
@@ -103,6 +104,17 @@ jobs:
       - name: Bootstrap Database
         run: |
           PGPASSWORD=dev_postgres_password psql -h localhost -U postgres -d karobarone_dev -f tools/db/bootstrap.sql
+
+      - name: Run Database Migrations
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:dev_postgres_password@localhost:5432/karobarone_dev
+          MIGRATION_DATABASE_URL: postgresql+asyncpg://postgres:dev_postgres_password@localhost:5432/karobarone_dev
+        run: |
+          cp -n .env.example .env || true
+          for s in iam tenant approval catalog domain customer subscription inventory; do
+            echo "Running migrations for $s..."
+            (cd services/$s && alembic upgrade head)
+          done
 
       - name: Run Acceptance Criteria Coverage Check
         run: python tools/check_ac_coverage.py

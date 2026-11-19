@@ -21,16 +21,19 @@ async def test_runtime_role_cannot_run_ddl(postgres_url, schema):
             with pytest.raises((ProgrammingError, DBAPIError)) as exc_info:
                 await conn.execute(text(f"CREATE TABLE {schema}.__test_forbidden_ddl (id int);"))
             assert "permission denied" in str(exc_info.value).lower() or "must be owner" in str(exc_info.value).lower()
+            await conn.rollback()
 
             # 2. Attempt ALTER TABLE
             with pytest.raises((ProgrammingError, DBAPIError)) as exc_info:
                 await conn.execute(text(f"ALTER TABLE {schema}.outbox_events ADD COLUMN __forbidden int;"))
             assert "permission denied" in str(exc_info.value).lower() or "must be owner" in str(exc_info.value).lower()
+            await conn.rollback()
 
             # 3. Attempt DROP TABLE
             with pytest.raises((ProgrammingError, DBAPIError)) as exc_info:
                 await conn.execute(text(f"DROP TABLE {schema}.outbox_events;"))
             assert "permission denied" in str(exc_info.value).lower() or "must be owner" in str(exc_info.value).lower()
+            await conn.rollback()
     finally:
         await engine.dispose()
 

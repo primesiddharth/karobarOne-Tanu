@@ -22,3 +22,13 @@ env/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Database backups
+*.db-journal
+*.db-wal
+*.db-shm

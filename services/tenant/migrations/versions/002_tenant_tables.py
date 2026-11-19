@@ -156,7 +156,7 @@ def upgrade() -> None:
     )
     op.create_index('idx_store_tenant', 'stores', ['tenant_id'], schema='tenant')
     op.create_index(
-        'uq_active_store_gstin',
+        'uq_active_store_gstin_store',
         'stores',
         ['gstin_id'],
         unique=True,

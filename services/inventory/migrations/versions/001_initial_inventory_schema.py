@@ -176,27 +176,74 @@ def upgrade() -> None:
 
     # 8. Row Level Security policies
     for tbl in ('skus', 'stock_balances', 'reservations', 'stock_movements', 'inventory_adjustments'):
-        op.execute(f"ALTER TABLE inventory.{tbl} ENABLE ROW LEVEL SECURITY")
+        op.execute(f"ALTER TABLE inventory.{tbl} ENABLE ROW LEVEL SECURITY;")
+        op.execute(f"ALTER TABLE inventory.{tbl} FORCE ROW LEVEL SECURITY;")
+
+        # Migrator role policy: migrator has full access without flags
         op.execute(f"""
-            CREATE POLICY {tbl}_tenant_store_isolation ON inventory.{tbl}
-            FOR ALL
-            USING (
-                current_setting('app.is_platform_admin', true) = 'true'
-                OR (
-                    store_id = current_setting('app.store_id', true)::uuid
-                    AND tenant_id = current_setting('app.tenant_id', true)::uuid
-                )
-            )
-            WITH CHECK (
-                current_setting('app.is_platform_admin', true) = 'true'
-                OR (
-                    store_id = current_setting('app.store_id', true)::uuid
-                    AND tenant_id = current_setting('app.tenant_id', true)::uuid
-                )
-            )
+        DO $$
+        BEGIN
+            IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'inventory_migrator') THEN
+                DROP POLICY IF EXISTS migrator_full_access ON inventory.{tbl};
+                CREATE POLICY migrator_full_access ON inventory.{tbl}
+                    TO inventory_migrator
+                    USING (true)
+                    WITH CHECK (true);
+            END IF;
+        END
+        $$;
+        """)
+
+        # Tenant isolation policy
+        op.execute(f"""
+        DO $$
+        BEGIN
+            DROP POLICY IF EXISTS {tbl}_tenant_store_isolation ON inventory.{tbl};
+            IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'inventory_svc') THEN
+                CREATE POLICY {tbl}_tenant_store_isolation ON inventory.{tbl}
+                    TO inventory_svc
+                    USING (
+                        current_setting('app.is_platform_admin', true) = 'true'
+                        OR (
+                            store_id = NULLIF(current_setting('app.store_id', true), '')::uuid
+                            AND tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+                        )
+                    )
+                    WITH CHECK (
+                        current_setting('app.is_platform_admin', true) = 'true'
+                        OR (
+                            store_id = NULLIF(current_setting('app.store_id', true), '')::uuid
+                            AND tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+                        )
+                    );
+            ELSE
+                CREATE POLICY {tbl}_tenant_store_isolation ON inventory.{tbl}
+                    USING (
+                        current_setting('app.is_platform_admin', true) = 'true'
+                        OR (
+                            store_id = NULLIF(current_setting('app.store_id', true), '')::uuid
+                            AND tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+                        )
+                    )
+                    WITH CHECK (
+                        current_setting('app.is_platform_admin', true) = 'true'
+                        OR (
+                            store_id = NULLIF(current_setting('app.store_id', true), '')::uuid
+                            AND tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+                        )
+                    );
+            END IF;
+        END
+        $$;
         """)
 
 
 def downgrade() -> None:
+    for tbl in ('skus', 'stock_balances', 'reservations', 'stock_movements', 'inventory_adjustments'):
+        op.execute(f"DROP POLICY IF EXISTS migrator_full_access ON inventory.{tbl};")
+        op.execute(f"DROP POLICY IF EXISTS {tbl}_tenant_store_isolation ON inventory.{tbl};")
+        op.execute(f"ALTER TABLE inventory.{tbl} NO FORCE ROW LEVEL SECURITY;")
+        op.execute(f"ALTER TABLE inventory.{tbl} DISABLE ROW LEVEL SECURITY;")
+
     for tbl in ('inventory_adjustments', 'stock_movements', 'reservations', 'stock_balances', 'skus', 'scheduled_jobs', 'idempotency_keys', 'processed_events', 'outbox_events'):
         op.execute(f"DROP TABLE IF EXISTS inventory.{tbl} CASCADE")

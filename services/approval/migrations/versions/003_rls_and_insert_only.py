@@ -28,9 +28,9 @@ def upgrade() -> None:
     ALTER TABLE approval.approval_state_history
         ADD COLUMN IF NOT EXISTS tenant_id UUID,
         ADD COLUMN IF NOT EXISTS store_id UUID;
-    CREATE INDEX IF NOT EXISTS idx_approval_history_tenant ON approval.approval_state_history (tenant_id);
-    CREATE INDEX IF NOT EXISTS idx_approval_history_store ON approval.approval_state_history (store_id);
     """)
+    op.execute("CREATE INDEX IF NOT EXISTS idx_approval_history_tenant ON approval.approval_state_history (tenant_id);")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_approval_history_store ON approval.approval_state_history (store_id);")
 
     # 2. Enable & Force Row Level Security on all approval tables
     for t in APPROVAL_TABLES:

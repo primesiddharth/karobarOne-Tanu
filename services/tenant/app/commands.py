@@ -779,7 +779,11 @@ async def bind_gstin_to_store_command(
     try:
         await session.flush()
     except IntegrityError as exc:
-        if "uq_active_store_gstin" in str(exc).lower() or "uq_active_store_assignment" in str(exc).lower():
+        if (
+            "uq_active_store_gstin" in str(exc).lower()
+            or "uq_active_store_assignment" in str(exc).lower()
+            or "uq_active_store_gstin_assignment" in str(exc).lower()
+        ):
             raise ApiError(ErrorCode.GSTIN_ALREADY_USED, "GSTIN or store already has an active assignment", status_code=409) from exc
         raise
 

@@ -2,6 +2,7 @@
 # Acceptance Criteria test suite for Approval & Governance service (SERVICES.md §3, ROADMAP.md Phase 4).
 # Function names follow test_ac_NNN_* pattern checked by tools/check_ac_coverage.py.
 import pytest
+import json
 from uuid import uuid4
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock
@@ -14,6 +15,11 @@ from app import domain
 from app import models
 
 pytestmark = pytest.mark.asyncio
+
+
+def get_payload(call_args):
+    p = call_args["payload"]
+    return json.loads(p) if isinstance(p, str) else p
 
 
 def make_mock_session(execute_results=None, get_mapping=None):
@@ -81,7 +87,7 @@ async def test_ac_079_controlled_content_cannot_go_live_without_approval():
     assert mock_session.execute.call_count >= 1
     call_args = mock_session.execute.call_args_list[0][0][1]
     assert call_args["event_type"] == "content.submitted.v1"
-    assert call_args["payload"]["content_id"] == str(item_id)
+    assert get_payload(call_args)["content_id"] == str(item_id)
 
     # 2. Before approval, status remains PENDING and cannot go live without approve command
     assert req.status == "PENDING"
@@ -104,8 +110,8 @@ async def test_ac_079_controlled_content_cannot_go_live_without_approval():
     # Verify outbox event 'content.approved.v1' emitted
     approve_call_args = approve_session.execute.call_args_list[1][0][1]
     assert approve_call_args["event_type"] == "content.approved.v1"
-    assert approve_call_args["payload"]["approval_id"] == str(req.id)
-    assert approve_call_args["payload"]["reviewer_id"] == str(reviewer_id)
+    assert get_payload(approve_call_args)["approval_id"] == str(req.id)
+    assert get_payload(approve_call_args)["reviewer_id"] == str(reviewer_id)
 
 
 async def test_ac_080_rejected_content_records_reason():
@@ -168,8 +174,8 @@ async def test_ac_080_rejected_content_records_reason():
     # Verify outbox event 'content.rejected.v1' emitted
     reject_call_args = valid_session.execute.call_args_list[1][0][1]
     assert reject_call_args["event_type"] == "content.rejected.v1"
-    assert reject_call_args["payload"]["reason_code"] == "PROHIBITED_CLAIMS"
-    assert reject_call_args["payload"]["reason_text"] == "Misleading health claims detected in storefront description"
+    assert get_payload(reject_call_args)["reason_code"] == "PROHIBITED_CLAIMS"
+    assert get_payload(reject_call_args)["reason_text"] == "Misleading health claims detected in storefront description"
 
 
 async def test_ac_081_platform_staff_can_emergency_unpublish_content():
@@ -244,5 +250,5 @@ async def test_ac_081_platform_staff_can_emergency_unpublish_content():
     # Verify outbox event 'content.emergency-takedown.v1' emitted
     takedown_call_args = valid_session.execute.call_args_list[1][0][1]
     assert takedown_call_args["event_type"] == "content.emergency-takedown.v1"
-    assert takedown_call_args["payload"]["reason_code"] == "COUNTERFEIT"
-    assert takedown_call_args["payload"]["executed_by"] == str(reviewer_id)
+    assert get_payload(takedown_call_args)["reason_code"] == "COUNTERFEIT"
+    assert get_payload(takedown_call_args)["executed_by"] == str(reviewer_id)

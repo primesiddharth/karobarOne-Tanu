@@ -225,7 +225,7 @@ class Store(Base):
             name="chk_store_lifecycle_status",
         ),
         # Partial unique index: One active paid store per GSTIN (AC-008/009)
-        Index("uq_active_store_gstin", "gstin_id", unique=True, postgresql_where=text("gstin_id IS NOT NULL AND archived_at IS NULL")),
+        Index("uq_active_store_gstin_store", "gstin_id", unique=True, postgresql_where=text("gstin_id IS NOT NULL AND archived_at IS NULL")),
         {"schema": "tenant"},
     )
 
@@ -299,7 +299,7 @@ class StoreGstinAssignment(Base):
     __tablename__ = "store_gstin_assignments"
     __table_args__ = (
         # Partial UNIQUE on gstin_id: same GSTIN cannot actively back two paid stores (AC-008..010)
-        Index("uq_active_store_gstin", "gstin_id", unique=True, postgresql_where=text("released_at IS NULL")),
+        Index("uq_active_store_gstin_assignment", "gstin_id", unique=True, postgresql_where=text("released_at IS NULL")),
         # Partial UNIQUE on store_id: one store can only hold one active GSTIN assignment at once
         Index("uq_active_store_assignment", "store_id", unique=True, postgresql_where=text("released_at IS NULL")),
         {"schema": "tenant"},

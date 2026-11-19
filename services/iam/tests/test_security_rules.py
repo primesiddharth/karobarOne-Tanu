@@ -1,6 +1,7 @@
 # tests/test_security_rules.py
 # Verification of IAM security rules: SEC-TST-005..008, enumeration resistance,
 # refresh replay detection, concurrency, and generic status mutation refusal.
+import json
 import pytest
 from uuid import uuid4, UUID
 from datetime import datetime, timezone, timedelta
@@ -202,7 +203,8 @@ async def test_refresh_token_replay_revokes_entire_session():
     # Second call is the outbox event insert
     outbox_insert_params = execute_calls[1][0][1]
     assert outbox_insert_params["event_type"] == "identity.session.revoked.v1"
-    assert outbox_insert_params["payload"]["reason"] == "REFRESH_TOKEN_REPLAY"
+    payload = json.loads(outbox_insert_params["payload"]) if isinstance(outbox_insert_params["payload"], str) else outbox_insert_params["payload"]
+    assert payload["reason"] == "REFRESH_TOKEN_REPLAY"
 
 
 # -----------------------------------------------------------------------------

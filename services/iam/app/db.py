@@ -2,13 +2,14 @@
 from collections.abc import AsyncGenerator
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 from sqlalchemy import text
 from .config import settings
 
 engine = create_async_engine(
     settings.DATABASE_URL,
     connect_args={"statement_cache_size": 0},
-    pool_pre_ping=True,
+    poolclass=NullPool,
     echo=False,
 )
 
